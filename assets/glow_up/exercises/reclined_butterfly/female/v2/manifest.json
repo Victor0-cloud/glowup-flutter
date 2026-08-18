@@ -1,0 +1,40 @@
+{
+  "exerciseId": "EX067",
+  "name": "Reclined Butterfly",
+  "slug": "reclined_butterfly",
+  "category": "Bedtime",
+  "routine": "Deep Sleep Prep",
+  "difficulty": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "durationSeconds": 60,
+  "playbackType": "hold",
+  "loop": false,
+  "equipment": [],
+  "position": "supine_hip_opener",
+  "imageSize": { "width": 277, "height": 265 },
+  "thumbnailFrame": "EX067_F_04_HOLD.png",
+  "frames": [
+    { "order": 1, "file": "EX067_F_01_PREPARE.png", "label": "Prepare", "seconds": 3, "cue": "Lie on your back with knees bent and feet flat." },
+    { "order": 2, "file": "EX067_F_02_OPEN_KNEES.png", "label": "Open Knees", "seconds": 5, "cue": "Bring the soles of your feet together and let your knees open gently." },
+    { "order": 3, "file": "EX067_F_03_SETTLE.png", "label": "Settle", "seconds": 3, "cue": "Relax your hips and support the thighs if needed." },
+    { "order": 4, "file": "EX067_F_04_HOLD.png", "label": "Hold", "seconds": 44, "cue": "Stay within a comfortable range without pressing the knees down." },
+    { "order": 5, "file": "EX067_F_05_CLOSE_KNEES.png", "label": "Close Knees", "seconds": 3, "cue": "Use your hands if needed and bring your knees together slowly." },
+    { "order": 6, "file": "EX067_F_06_RESET.png", "label": "Reset", "seconds": 2, "cue": "Return both feet to a comfortable neutral position." }
+  ],
+  "safety": [
+    "Never press the knees toward the floor.",
+    "Place pillows beneath the thighs if the hips or groin feel strained.",
+    "Reduce the range or stop for sharp groin, hip, knee or lower-back pain."
+  ],
+  "voiceAutomation": {
+    "mode": "entry_exit_and_timer_cues",
+    "continuousBreathingPrompts": false,
+    "bedtimeTone": "soft"
+  },
+  "aiCoachNote": {
+    "enabled": true,
+    "prompt": "How did Reclined Butterfly feel? Note hip, groin, knee or lower-back comfort and whether you needed support.",
+    "trainingSignals": ["hip_comfort", "groin_comfort", "knee_comfort", "lower_back_comfort", "support_used", "range_of_motion"]
+  }
+}

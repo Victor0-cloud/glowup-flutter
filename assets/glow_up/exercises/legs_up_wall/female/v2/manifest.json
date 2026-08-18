@@ -1,0 +1,40 @@
+{
+  "exerciseId": "EX066",
+  "name": "Legs Up Wall",
+  "slug": "legs_up_wall",
+  "category": "Bedtime",
+  "routine": "Deep Sleep Prep",
+  "difficulty": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "durationSeconds": 60,
+  "playbackType": "hold",
+  "loop": false,
+  "equipment": [],
+  "position": "supine_wall_supported",
+  "imageSize": { "width": 277, "height": 265 },
+  "thumbnailFrame": "EX066_F_04_HOLD.png",
+  "frames": [
+    { "order": 1, "file": "EX066_F_01_PREPARE.png", "label": "Prepare", "seconds": 2, "cue": "Sit sideways with one hip close to the wall." },
+    { "order": 2, "file": "EX066_F_02_LOWER_AND_TURN.png", "label": "Lower and Turn", "seconds": 5, "cue": "Lower onto your back and bring your feet onto the wall." },
+    { "order": 3, "file": "EX066_F_03_LEGS_UP.png", "label": "Legs Up", "seconds": 3, "cue": "Straighten your legs comfortably up the wall." },
+    { "order": 4, "file": "EX066_F_04_HOLD.png", "label": "Hold", "seconds": 45, "cue": "Relax your shoulders, soften your knees and remain comfortable." },
+    { "order": 5, "file": "EX066_F_05_BEND_KNEES_EXIT.png", "label": "Bend Knees Exit", "seconds": 3, "cue": "Bend your knees and roll gently to one side." },
+    { "order": 6, "file": "EX066_F_06_RECOVERY.png", "label": "Recovery", "seconds": 2, "cue": "Return slowly to a comfortable seated position." }
+  ],
+  "safety": [
+    "Keep the hips a comfortable distance from the wall; move farther away if the hamstrings pull.",
+    "Keep a soft bend in the knees and avoid forcing the legs straight.",
+    "Exit slowly if there is dizziness, numbness, tingling, back pain or increased eye pressure discomfort."
+  ],
+  "voiceAutomation": {
+    "mode": "entry_exit_and_timer_cues",
+    "continuousBreathingPrompts": false,
+    "bedtimeTone": "soft"
+  },
+  "aiCoachNote": {
+    "enabled": true,
+    "prompt": "How did Legs Up Wall feel? Note hamstring tension, back comfort, tingling or dizziness.",
+    "trainingSignals": ["hamstring_tension", "lower_back_comfort", "tingling", "numbness", "dizziness", "wall_distance_modification", "knee_bend_modification"]
+  }
+}
