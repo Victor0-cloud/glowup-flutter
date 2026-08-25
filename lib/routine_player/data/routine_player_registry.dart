@@ -131,14 +131,17 @@ final _deepBreathing = ExerciseDefinition(
   ),
 );
 
-/// Real, individually-exported (not manually cropped) V1 Squat frame —
-/// Figma `wZpdIxyGJ3DDPVHtZtwQeC`, node `01_SQUAT > SQUAT_ANIMATION_ASSETS_V1
-/// > FEMALE` (nodes 431:46-431:51). Portrait 400×600 (@2x 800×1280) — its
-/// own real ratio, distinct from Lunges' 600x1220, never bucketed/shared.
-/// Replaces the original static EX007/female/0N.png Exercise Sequence
-/// Library set for the ACTIVE-phase animation.
-String _squatV1Asset(String file) =>
-    'assets/glow_up/exercises/squat/female/v1/squat_female_$file.png';
+/// Approved V2 Squat replacement — uniform lavender Glow Up Cardio/Full
+/// Body Burn visual system (package `GlowUp_Full_Body_Burn_Squat_V2_
+/// Replacement.zip`, `exercise/squat/female/v2/`), asset replacement only:
+/// same canonical id (EX007), same REPS/15/45s metadata, same Strength
+/// Foundations and Full Body Burn routine positions — only the imagery and
+/// playback mechanism changed (old weighted `timedCycle` V1 real-room
+/// frames -> even `continuousLoop` V2 frames). Replaces `_squatV1Asset`'s
+/// `assets/glow_up/exercises/squat/female/v1/squat_female_0N.png` set;
+/// those v1 files are left on disk, untouched, no longer referenced.
+String _squatV2Asset(String file) =>
+    'assets/glow_up/exercises/squat/female/v2/$file.png';
 
 final _squat = ExerciseDefinition(
   id: 'EX007',
@@ -151,70 +154,64 @@ final _squat = ExerciseDefinition(
   reps: 15,
   poses: [
     PoseDefinition(
-      poseId: 'squat_v1_01',
+      poseId: 'squat_v2_01',
       order: 1,
-      label: 'START',
+      label: 'STAND',
       instruction: 'Stand with feet shoulder-width apart.',
-      approvedAsset: _squatV1Asset('01_start'),
+      approvedAsset: _squatV2Asset('F_01'),
       purpose: PosePurpose.setup,
-      phaseSeconds: 0.9,
     ),
     PoseDefinition(
-      poseId: 'squat_v1_02',
+      poseId: 'squat_v2_02',
       order: 2,
-      label: 'BEGIN LOWER',
+      label: 'DESCEND',
       instruction: 'Begin pushing your hips back.',
-      approvedAsset: _squatV1Asset('02_begin_lower'),
+      approvedAsset: _squatV2Asset('F_02'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.7,
     ),
     PoseDefinition(
-      poseId: 'squat_v1_03',
+      poseId: 'squat_v2_03',
       order: 3,
-      label: 'MID LOWER',
+      label: 'DEEPER DESCENT',
       instruction: 'Continue lowering with control.',
-      approvedAsset: _squatV1Asset('03_mid_lower'),
+      approvedAsset: _squatV2Asset('F_03'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.7,
     ),
     PoseDefinition(
-      poseId: 'squat_v1_04',
+      poseId: 'squat_v2_04',
       order: 4,
-      label: 'BOTTOM',
+      label: 'SAFE BOTTOM',
       instruction: 'Hold at the bottom of the squat.',
-      approvedAsset: _squatV1Asset('04_bottom'),
+      approvedAsset: _squatV2Asset('F_04'),
       purpose: PosePurpose.active,
-      phaseSeconds: 1.1,
     ),
     PoseDefinition(
-      poseId: 'squat_v1_05',
+      poseId: 'squat_v2_05',
       order: 5,
-      label: 'BEGIN RISE',
+      label: 'RISE',
       instruction: 'Drive through your heels to rise.',
-      approvedAsset: _squatV1Asset('05_begin_rise'),
+      approvedAsset: _squatV2Asset('F_05'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.7,
     ),
     PoseDefinition(
-      poseId: 'squat_v1_06',
+      poseId: 'squat_v2_06',
       order: 6,
-      label: 'RETURN STAND',
+      label: 'STAND',
       instruction: 'Return to standing.',
-      approvedAsset: _squatV1Asset('06_return_stand'),
+      approvedAsset: _squatV2Asset('F_06'),
       purpose: PosePurpose.returnPhase,
-      phaseSeconds: 1.1,
     ),
   ],
-  // Weighted timed loop (not an even/fast split) — ~5.2s per full
-  // standing->descending->bottom->rising->standing cycle, with the two
-  // stable positions (BOTTOM, RETURN STAND) held longer than the
-  // transitional frames, so it reads as a controlled demonstration rather
-  // than a slideshow (matches the cadence approach already used for Plank).
-  loopMode: LoopMode.timedCycle,
+  // Even continuous loop, matching the Jumping Jacks V2 approach: 15 reps
+  // over the 45s duration = 3.0s per rep cycle (0.5s/frame), F_01->F_06
+  // then a smooth wrap back to F_01 — no held/weighted frames.
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 3.0,
   visualOrientation: ExerciseVisualOrientation.portrait,
-  visualAspectRatio:
-      400 /
-      640, // real Squat V1 frames, 400x640 (distinct from Lunges' 600x1220)
+  visualAspectRatio: 326 / 804, // real Squat V2 frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/squat/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
   voiceScript: const VoiceScript(
     intro: 'Next: Squats.',
     benefit: 'Squats strengthen your lower body and support your core.',
@@ -227,119 +224,22 @@ final _squat = ExerciseDefinition(
   ),
 );
 
-/// Real, individually-exported (not manually cropped) Figma frame for the
-/// Lunge animation — file key `wZpdIxyGJ3DDPVHtZtwQeC`, node
-/// `GLOW_UP_ANIMATION_ASSETS > LUNGES > FEMALE > LEFT/RIGHT`. Each frame
-/// was fetched via `download_assets`' node `export` (which renders the
-/// node's own flattened bounding box) rather than the raw embedded image
-/// URL — the raw asset behind every frame is actually one shared
-/// 1536×1024 reference sheet, so using it directly would have required
-/// manually computing a CSS-percentage crop, exactly the kind of
-/// independent repositioning the brief prohibited.
-String _lungeAsset(String side, String file) =>
-    'assets/glow_up/exercise_animations/lunges/female/$side/$file.png';
-
-final _lungeLeftFrames = [
-  PoseDefinition(
-    poseId: 'lunge_left_01',
-    order: 1,
-    label: 'START',
-    instruction: 'Stand tall with feet hip-width apart.',
-    approvedAsset: _lungeAsset('left', '01_start'),
-    purpose: PosePurpose.setup,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_left_02',
-    order: 2,
-    label: 'STEP FORWARD',
-    instruction: 'Step forward with your left leg.',
-    approvedAsset: _lungeAsset('left', '02_step_forward'),
-    purpose: PosePurpose.transition,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_left_03',
-    order: 3,
-    label: 'LOWER',
-    instruction: 'Lower your back knee toward the floor.',
-    approvedAsset: _lungeAsset('left', '03_lower'),
-    purpose: PosePurpose.transition,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_left_04',
-    order: 4,
-    label: 'BOTTOM',
-    instruction: 'Hold the lunge position with control.',
-    approvedAsset: _lungeAsset('left', '04_bottom'),
-    purpose: PosePurpose.active,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_left_05',
-    order: 5,
-    label: 'PUSH UP',
-    instruction: 'Push through your front heel to rise.',
-    approvedAsset: _lungeAsset('left', '05_push_up'),
-    purpose: PosePurpose.transition,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_left_06',
-    order: 6,
-    label: 'RETURN',
-    instruction: 'Return to standing.',
-    approvedAsset: _lungeAsset('left', '06_return'),
-    purpose: PosePurpose.returnPhase,
-  ),
-];
-
-final _lungeRightFrames = [
-  PoseDefinition(
-    poseId: 'lunge_right_01',
-    order: 1,
-    label: 'START',
-    instruction: 'Stand tall with feet hip-width apart.',
-    approvedAsset: _lungeAsset('right', '01_start'),
-    purpose: PosePurpose.setup,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_right_02',
-    order: 2,
-    label: 'STEP FORWARD',
-    instruction: 'Step forward with your right leg.',
-    approvedAsset: _lungeAsset('right', '02_step_forward'),
-    purpose: PosePurpose.transition,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_right_03',
-    order: 3,
-    label: 'LOWER',
-    instruction: 'Lower your back knee toward the floor.',
-    approvedAsset: _lungeAsset('right', '03_lower'),
-    purpose: PosePurpose.transition,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_right_04',
-    order: 4,
-    label: 'BOTTOM',
-    instruction: 'Hold the lunge position with control.',
-    approvedAsset: _lungeAsset('right', '04_bottom'),
-    purpose: PosePurpose.active,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_right_05',
-    order: 5,
-    label: 'PUSH UP',
-    instruction: 'Push through your front heel to rise.',
-    approvedAsset: _lungeAsset('right', '05_push_up'),
-    purpose: PosePurpose.transition,
-  ),
-  PoseDefinition(
-    poseId: 'lunge_right_06',
-    order: 6,
-    label: 'RETURN',
-    instruction: 'Return to standing.',
-    approvedAsset: _lungeAsset('right', '06_return'),
-    purpose: PosePurpose.returnPhase,
-  ),
-];
+/// Approved V2 Lunges replacement — uniform lavender Glow Up Cardio/Full
+/// Body Burn visual system (package `GlowUp_Full_Body_Burn_Lunges_
+/// PushUps_V2.zip`, `exercise/lunges/female/v2/`), asset replacement
+/// only: same canonical id (EX008), same 45s duration and Full Body Burn
+/// routine position, same 'SIDE_SEQUENCE' playback badge (preserved per
+/// approved UI, same convention as Thoracic Rotation/EX074) — only the
+/// imagery and playback mechanism changed. The approved package supplies
+/// exactly one 6-frame set (not a separate left/right pair), so there is
+/// nothing left to bilaterally alternate — replaces the old bilateral
+/// `_lungeLeftFrames`/`_lungeRightFrames`/`BilateralFrameSequence` pair
+/// (`assets/glow_up/exercise_animations/lunges/female/left|right/`) with
+/// a single even `continuousLoop`, the same shape as Squat V2/Thoracic
+/// Rotation. Those old left/right files are left on disk, untouched, no
+/// longer referenced.
+String _lungesV2Asset(String file) =>
+    'assets/glow_up/exercises/lunges/female/v2/$file.png';
 
 final _lunges = ExerciseDefinition(
   id: 'EX008',
@@ -350,17 +250,66 @@ final _lunges = ExerciseDefinition(
   benefitShort: 'Lunges build lower-body strength and stability.',
   durationSeconds: 45,
   reps: 10,
-  poses:
-      _lungeLeftFrames, // used for step-count/order display; ACTIVE movement is driven by bilateralFrames below
+  poses: [
+    PoseDefinition(
+      poseId: 'lunges_v2_01',
+      order: 1,
+      label: 'STAND',
+      instruction: 'Stand tall with feet hip-width apart.',
+      approvedAsset: _lungesV2Asset('F_01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'lunges_v2_02',
+      order: 2,
+      label: 'STEP FORWARD',
+      instruction: 'Step forward into the lunge.',
+      approvedAsset: _lungesV2Asset('F_02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'lunges_v2_03',
+      order: 3,
+      label: 'LOWER',
+      instruction: 'Lower your back knee toward the floor.',
+      approvedAsset: _lungesV2Asset('F_03'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'lunges_v2_04',
+      order: 4,
+      label: 'LUNGE HOLD',
+      instruction: 'Hold the lunge position with control.',
+      approvedAsset: _lungesV2Asset('F_04'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'lunges_v2_05',
+      order: 5,
+      label: 'RISE',
+      instruction: 'Push through your front heel to rise.',
+      approvedAsset: _lungesV2Asset('F_05'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'lunges_v2_06',
+      order: 6,
+      label: 'STAND',
+      instruction: 'Return to standing.',
+      approvedAsset: _lungesV2Asset('F_06'),
+      purpose: PosePurpose.returnPhase,
+    ),
+  ],
+  // Even continuous loop, matching the Squat V2 approach: 10 reps over
+  // the 45s duration = 4.5s per rep cycle (0.75s/frame), F_01->F_06 then
+  // a smooth wrap back to F_01 — no held/weighted frames.
   loopMode: LoopMode.continuousLoop,
-  loopCycleSeconds: 5,
-  bilateralFrames: BilateralFrameSequence(
-    left: _lungeLeftFrames,
-    right: _lungeRightFrames,
-  ),
+  loopCycleSeconds: 4.5,
   visualOrientation: ExerciseVisualOrientation.portrait,
-  visualAspectRatio:
-      600 / 1220, // real Lunge V2 frames (distinct from Squat's 400x640)
+  visualAspectRatio: 326 / 804, // real Lunges V2 frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/lunges/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
   voiceScript: const VoiceScript(
     intro: 'Next: Lunges.',
     benefit:
@@ -368,25 +317,28 @@ final _lunges = ExerciseDefinition(
     setupInstruction: 'Stand tall with feet hip-width apart.',
     formCues: ['Keep your front knee over your ankle.'],
     finishCue: 'Great job.',
-    switchSideCue: 'Halfway there. Switch sides.',
   ),
 );
 
-/// Real, individually-exported (not manually cropped) V1 Pushups frame —
-/// Figma `wZpdIxyGJ3DDPVHtZtwQeC`, node `04_PUSHUPS > PUSHUP_ANIMATION_ASSETS_V1`
-/// (nodes 440:4-440:9). Landscape 600×400 (@2x 1200×800) — its own real
-/// ratio, kept as an explicit per-exercise value (not shared with Plank's
-/// numerically-identical-but-separately-declared 3:2). The QA board's
-/// reverse (6->5->4->3->2->1) row (nodes 440:45-440:50) is a design-time
-/// smoothness preview only — never used as production frames; the real
-/// animation is the forward six, repeating forward-only per the brief.
-/// Replaces the old EX010/female/0N.png Exercise Sequence Library set.
+/// Approved V2 Pushups replacement — uniform lavender Glow Up Cardio/Full
+/// Body Burn visual system (package `GlowUp_Full_Body_Burn_Lunges_
+/// PushUps_V2.zip`, `exercise/pushups/female/v2/`), asset replacement
+/// only: same canonical id (EX010), same REPS/12/40s metadata and Full
+/// Body Burn routine position — only the imagery and playback mechanism
+/// changed (old weighted `timedCycle` V1 real-room frames -> even
+/// `continuousLoop` V2 frames). Portrait 326×804 canvas (the pushup body
+/// itself is horizontal within it, same real-file-dimensions convention
+/// as every other V2 set) — distinct from the old V1 set's literal
+/// landscape 600×400 frames. Replaces `_pushupsV1Asset`'s
+/// `assets/glow_up/exercises/pushups/female/v1/pushup_female_0N.png`
+/// set; those v1 files are left on disk, untouched, no longer
+/// referenced.
 ///
 /// Named "Pushups" (not "Push-Ups") throughout — display text AND every
 /// voice string — per explicit instruction: the old hyphenated spelling
 /// was being mispronounced by TTS.
-String _pushupsV1Asset(String file) =>
-    'assets/glow_up/exercises/pushups/female/v1/pushup_female_$file.png';
+String _pushupsV2Asset(String file) =>
+    'assets/glow_up/exercises/pushups/female/v2/$file.png';
 
 final _pushUps = ExerciseDefinition(
   id: 'EX010',
@@ -399,67 +351,65 @@ final _pushUps = ExerciseDefinition(
   reps: 12,
   poses: [
     PoseDefinition(
-      poseId: 'pushups_v1_01',
+      poseId: 'pushups_v2_01',
       order: 1,
       label: 'START',
       instruction:
           'Start in a high plank. Keep your body in a straight line and brace your core.',
-      approvedAsset: _pushupsV1Asset('01_start'),
+      approvedAsset: _pushupsV2Asset('F_01'),
       purpose: PosePurpose.setup,
-      phaseSeconds: 0.5,
     ),
     PoseDefinition(
-      poseId: 'pushups_v1_02',
+      poseId: 'pushups_v2_02',
       order: 2,
       label: 'BEGIN LOWER',
       instruction: 'Begin lowering with control.',
-      approvedAsset: _pushupsV1Asset('02_begin_lower'),
+      approvedAsset: _pushupsV2Asset('F_02'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.5,
     ),
     PoseDefinition(
-      poseId: 'pushups_v1_03',
+      poseId: 'pushups_v2_03',
       order: 3,
       label: 'MID LOWER',
       instruction: 'Continue lowering your chest.',
-      approvedAsset: _pushupsV1Asset('03_mid_lower'),
+      approvedAsset: _pushupsV2Asset('F_03'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.5,
     ),
     PoseDefinition(
-      poseId: 'pushups_v1_04',
+      poseId: 'pushups_v2_04',
       order: 4,
       label: 'BOTTOM',
       instruction: 'Chest just above the floor.',
-      approvedAsset: _pushupsV1Asset('04_bottom'),
+      approvedAsset: _pushupsV2Asset('F_04'),
       purpose: PosePurpose.active,
-      phaseSeconds: 0.5,
     ),
     PoseDefinition(
-      poseId: 'pushups_v1_05',
+      poseId: 'pushups_v2_05',
       order: 5,
       label: 'BEGIN PUSH',
       instruction: 'Push back up with control.',
-      approvedAsset: _pushupsV1Asset('05_begin_push'),
+      approvedAsset: _pushupsV2Asset('F_05'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.5,
     ),
     PoseDefinition(
-      poseId: 'pushups_v1_06',
+      poseId: 'pushups_v2_06',
       order: 6,
       label: 'RETURN HIGH',
       instruction: 'Return to high plank.',
-      approvedAsset: _pushupsV1Asset('06_return_high_plank'),
+      approvedAsset: _pushupsV2Asset('F_06'),
       purpose: PosePurpose.returnPhase,
-      phaseSeconds: 0.5,
     ),
   ],
-  // Even 500ms/frame (within the requested 450-600ms QA range), forward-
-  // only repeat (01->06->01...) — never the QA board's reverse preview
-  // order. 3.0s per full cycle: controlled, not GIF-fast.
-  loopMode: LoopMode.timedCycle,
-  visualOrientation: ExerciseVisualOrientation.landscape,
-  visualAspectRatio: 600 / 400, // real Pushups V1 frames
+  // Even continuous loop, matching the Squat/Lunges V2 approach: 0.5s per
+  // frame x 6 frames = 3.0s per cycle, F_01->F_06 then a smooth wrap back
+  // to F_01 — no held/weighted frames.
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 3.0,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real Pushups V2 frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/pushups/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
   voiceScript: const VoiceScript(
     intro: 'Pushups.',
     benefit: 'This exercise strengthens your chest, shoulders, arms, and core.',
@@ -570,132 +520,140 @@ final _plank = ExerciseDefinition(
   ),
 );
 
-/// Real, individually-exported (not manually cropped) V1 Jumping Jack
-/// frame — Figma `wZpdIxyGJ3DDPVHtZtwQeC`, node `06_JUMPING_JACK >
-/// JUMPING_JACK_ANIMATION_ASSETS_V1` (nodes 455:13-455:18). Portrait
-/// 400×600 — its own real ratio, decoupled from every other exercise's.
-/// The QA board's forward-sequence preview (nodes 455:23-455:28, identical
-/// content to production) and its separate reversible-loop preview
-/// (455:31-455:41, an explicit ping-pong 01->06->01 smoothness check) are
-/// both design-time-only — production uses only the forward six, looping
-/// 01->06->01->repeat, never the reversible pattern.
-String _jumpingJackV1Asset(String file) =>
-    'assets/glow_up/exercises/jumping_jack/female/v1/jumping_jack_female_$file.png';
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/jumping_jack/female/v2/F_0N.png`. Portrait
+/// full-body frames, 362x724 (uniform, confirmed before use).
+/// `sequence_preview.png` is the same kind of wide filmstrip composite as
+/// every other V2 exercise's — routine-detail/rest-screen preview only,
+/// never a pose frame, never the active-exercise animation.
+///
+/// ASSET REPLACEMENT, not a new exercise: this is still `EX009`, the same
+/// canonical id used by both HIIT Cardio Blast and Full Body Burn — see
+/// their doc comments in workout_catalog.dart. The old V1 "real-room"
+/// frames (`jumping_jack/female/v1/jumping_jack_female_0N_*.png`) are no
+/// longer referenced anywhere in the runtime Jumping Jacks flow; the
+/// files themselves are left on disk untouched (not deleted). The Tier 2
+/// legacy catalog's own `hasVerifiedImages` flag for EX009 (exercise_
+/// catalog.dart) was also flipped off, the same fix already applied to
+/// EX001 Deep Breathing when it got its own V2 replacement — otherwise
+/// `resolvePoseAssetPath`'s Tier 2-first branch would keep resolving to
+/// the old legacy `exercises/EX009/female/0N.png` photos (a third,
+/// even-older asset set) ahead of this V2 set.
+///
+/// `displayName` corrected from the singular "Jumping Jack" to the
+/// canonical "Jumping Jacks" (matching the Tier 2 catalog name and the
+/// approved copy) as part of this pass.
+///
+/// Playback: `LoopMode.continuousLoop` — a genuine repeating loop, F_01 ->
+/// F_06 -> F_01 with no visible jump (F_06 and F_01 are both the same
+/// neutral "feet together, arms at sides" position). [loopCycleSeconds]
+/// 1.2s per full lap (0.2s/frame) x ~37.5 laps across the 45s duration —
+/// a fast, smooth cardio pace, replacing the old V1 set's asymmetric
+/// timedCycle weighting (this is a genuinely different playback shape,
+/// not just new images, per the approved spec).
+String _jumpingJackV2Asset(String file) =>
+    'assets/glow_up/exercises/jumping_jack/female/v2/F_$file.png';
 
-/// Reuses id `EX009` — same convention as every other RoutinePlayer
-/// exercise (EX001/007/008/010/011), whose ids deliberately mirror the same
-/// real-world exercise's id in the separate legacy `lib/workout` catalog
-/// (`EX009` = "Jumping Jacks" there too). RoutinePlayer does not import
-/// that module; this is a from-scratch definition using only real,
-/// individually-verified V1 frames.
 final _jumpingJack = ExerciseDefinition(
   id: 'EX009',
-  displayName: 'Jumping Jack',
+  displayName: 'Jumping Jacks',
   category: 'Cardio',
-  playbackType: 'REPS',
+  playbackType: 'TIMER',
   bodyAreas: const ['Full Body', 'Cardio'],
   benefitShort:
-      'This full-body exercise gets your arms and legs moving together and helps raise your heart rate.',
-  durationSeconds: 30,
+      'Raises your heart rate while working the legs, shoulders, and total body.',
+  durationSeconds: 45,
   poses: [
     PoseDefinition(
-      poseId: 'jumping_jack_v1_01',
+      poseId: 'jumping_jack_v2_01',
       order: 1,
       label: 'START',
       instruction:
-          'Stand tall with your feet together and your arms relaxed at your sides.',
-      approvedAsset: _jumpingJackV1Asset('01_start'),
+          'Stand tall with your feet together and your arms at your sides.',
+      approvedAsset: _jumpingJackV2Asset('01'),
       purpose: PosePurpose.setup,
-      phaseSeconds: 0.18,
     ),
     PoseDefinition(
-      poseId: 'jumping_jack_v1_02',
+      poseId: 'jumping_jack_v2_02',
       order: 2,
       label: 'OPENING',
-      instruction: 'Jump your feet apart as your arms begin to rise.',
-      approvedAsset: _jumpingJackV1Asset('02_opening'),
+      instruction: 'Jump your feet outward as your arms begin to rise.',
+      approvedAsset: _jumpingJackV2Asset('02'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.18,
     ),
     PoseDefinition(
-      poseId: 'jumping_jack_v1_03',
+      poseId: 'jumping_jack_v2_03',
       order: 3,
       label: 'FULL OPEN',
-      instruction: 'Feet apart, arms fully overhead.',
-      approvedAsset: _jumpingJackV1Asset('03_full_open'),
+      instruction: 'Feet wide, arms fully overhead.',
+      approvedAsset: _jumpingJackV2Asset('03'),
       purpose: PosePurpose.active,
-      phaseSeconds: 0.22,
     ),
     PoseDefinition(
-      poseId: 'jumping_jack_v1_04',
+      poseId: 'jumping_jack_v2_04',
       order: 4,
-      label: 'CLOSING',
-      instruction: 'Bring your arms down as your legs return inward.',
-      approvedAsset: _jumpingJackV1Asset('04_closing'),
+      label: 'LOWERING',
+      instruction: 'Feet still wide, arms lowering.',
+      approvedAsset: _jumpingJackV2Asset('04'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.18,
     ),
     PoseDefinition(
-      poseId: 'jumping_jack_v1_05',
+      poseId: 'jumping_jack_v2_05',
       order: 5,
-      label: 'FEET TOGETHER',
-      instruction: 'Feet together, arms back down.',
-      approvedAsset: _jumpingJackV1Asset('05_feet_together'),
-      purpose: PosePurpose.returnPhase,
-      phaseSeconds: 0.18,
+      label: 'CLOSING',
+      instruction: 'Jump your feet back together, arms nearly down.',
+      approvedAsset: _jumpingJackV2Asset('05'),
+      purpose: PosePurpose.active,
     ),
     PoseDefinition(
-      poseId: 'jumping_jack_v1_06',
+      poseId: 'jumping_jack_v2_06',
       order: 6,
-      label: 'READY',
-      instruction: 'Stable, upright, ready position.',
-      approvedAsset: _jumpingJackV1Asset('06_ready'),
-      purpose: PosePurpose.finish,
-      phaseSeconds: 0.16,
+      label: 'RESET',
+      instruction: 'Land softly, feet together, arms back at your sides.',
+      approvedAsset: _jumpingJackV2Asset('06'),
+      purpose: PosePurpose.transition,
     ),
   ],
-  // Weighted 180/180/220/180/180/160ms per frame (never an even split) =
-  // 1.10s per complete visual cycle — a rhythmic movement, not a slow
-  // held-pose demonstration like Squat/Plank. ~27 cycles across the 30s
-  // exercise. See currentPoseFor's LoopMode.timedCycle.
-  loopMode: LoopMode.timedCycle,
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds:
+      1.2, // 0.2s/frame x 6 frames — a fast, smooth cardio pace, ~37.5 laps across 45s
   visualOrientation: ExerciseVisualOrientation.portrait,
-  visualAspectRatio: 400 / 600, // real Jumping Jack V1 frames
+  visualAspectRatio: 362 / 724, // real Jumping Jacks V2 frames
   // Rhythmic movement: two overlapping semi-transparent bodies mid-crossfade
   // would look wrong — frames replace instantly instead (Section 12).
   crossfadeFrames: false,
+  thumbnailFrameOrder: 1,
+  previewAssetPath:
+      'assets/glow_up/exercises/jumping_jack/female/v2/sequence_preview.png',
+  previewAspectRatio: 2172 / 724,
   voiceScript: const VoiceScript(
-    intro: 'Next: Jumping Jack.',
+    intro: 'Next: Jumping Jacks.',
     benefit:
-        'This full-body exercise gets your arms and legs moving together and helps raise your heart rate.',
+        'Raises your heart rate while working the legs, shoulders, and total body.',
     setupInstruction:
-        'Stand tall with your feet together and your arms relaxed at your sides.',
-    quarterCue: 'Keep a steady rhythm.',
+        'Jump your feet out as your arms rise overhead, then return to the starting position.',
     formCues: [
-      'Land softly and keep your core engaged.',
+      'Keep a steady rhythm and land softly.',
     ], // the "Halfway there." prefix is added by VoiceCoach itself
     finishCue: 'Done.',
   ),
 );
 
-/// Real, individually-exported (not manually cropped) V1 Glute Bridge
-/// frame — Figma `wZpdIxyGJ3DDPVHtZtwQeC`, node `07_GLUTE_BRIDGE >
-/// GLUTE_BRIDGE_ANIMATION_ASSETS_V1` (nodes 465:13-465:18). Landscape
-/// 600×400 — its own real ratio, kept as an explicit per-exercise value
-/// (not shared with Plank's numerically-identical-but-separately-declared
-/// 3:2). The QA board's forward-sequence preview (465:23-465:28, identical
-/// content to production) and its separate reversible-loop preview
-/// (465:31-465:37, an explicit 01->02->03->04->03->02->01 smoothness check)
-/// are both design-time-only — production uses only the forward six,
-/// looping 01->06->01->repeat, never the reversible pattern.
+/// Approved Glute Bridge sequence — uniform lavender Glow Up Cardio/Full
+/// Body Burn visual system (package `GlowUp_Cardio_Next_Four_V2.zip`,
+/// `exercise/glute_bridge/female/v2/` in the package, deployed at the
+/// app's own established `glute_bridge/female/v1/` path — this exercise's
+/// first real approved set, so it keeps the "v1" folder name even though
+/// the package itself is internally labeled v2). Reuses id `EX018` — same
+/// convention as every other RoutinePlayer exercise, whose ids
+/// deliberately mirror the same real-world exercise's id in the separate
+/// legacy `lib/workout` catalog (`EX018` = "Glute Bridge" there too).
+/// Replaces the previous placeholder asset mapping (which pointed at
+/// `glute_bridge_female_0N_*.png` filenames that were never actually
+/// present on disk) with the real, verified `F_0N.png` set.
 String _gluteBridgeV1Asset(String file) =>
-    'assets/glow_up/exercises/glute_bridge/female/v1/glute_bridge_female_$file.png';
+    'assets/glow_up/exercises/glute_bridge/female/v1/$file.png';
 
-/// Reuses id `EX018` — same convention as every other RoutinePlayer
-/// exercise, whose ids deliberately mirror the same real-world exercise's
-/// id in the separate legacy `lib/workout` catalog (`EX018` = "Glute
-/// Bridge" there too). RoutinePlayer does not import that module; this is a
-/// from-scratch definition using only real, individually-verified V1 frames.
 final _gluteBridge = ExerciseDefinition(
   id: 'EX018',
   displayName: 'Glute Bridge',
@@ -704,69 +662,67 @@ final _gluteBridge = ExerciseDefinition(
   bodyAreas: const ['Glutes', 'Hamstrings', 'Core'],
   benefitShort: 'Glute bridges strengthen your glutes, hamstrings, and core.',
   durationSeconds: 40,
+  reps: 15,
   poses: [
     PoseDefinition(
       poseId: 'glute_bridge_v1_01',
       order: 1,
       label: 'START',
       instruction: 'Lie on your back with your knees bent and feet flat.',
-      approvedAsset: _gluteBridgeV1Asset('01_start'),
+      approvedAsset: _gluteBridgeV1Asset('F_01'),
       purpose: PosePurpose.setup,
-      phaseSeconds: 0.7,
     ),
     PoseDefinition(
       poseId: 'glute_bridge_v1_02',
       order: 2,
       label: 'ENGAGE',
       instruction: 'Engage your core and squeeze your glutes.',
-      approvedAsset: _gluteBridgeV1Asset('02_engage'),
+      approvedAsset: _gluteBridgeV1Asset('F_02'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.7,
     ),
     PoseDefinition(
       poseId: 'glute_bridge_v1_03',
       order: 3,
       label: 'LIFT',
       instruction: 'Lift your hips toward the ceiling.',
-      approvedAsset: _gluteBridgeV1Asset('03_lift'),
+      approvedAsset: _gluteBridgeV1Asset('F_03'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.7,
     ),
     PoseDefinition(
       poseId: 'glute_bridge_v1_04',
       order: 4,
       label: 'TOP',
       instruction: 'Squeeze at the top.',
-      approvedAsset: _gluteBridgeV1Asset('04_top'),
+      approvedAsset: _gluteBridgeV1Asset('F_04'),
       purpose: PosePurpose.active,
-      phaseSeconds: 1.1,
     ),
     PoseDefinition(
       poseId: 'glute_bridge_v1_05',
       order: 5,
       label: 'LOWER',
       instruction: 'Lower with control.',
-      approvedAsset: _gluteBridgeV1Asset('05_lower'),
+      approvedAsset: _gluteBridgeV1Asset('F_05'),
       purpose: PosePurpose.transition,
-      phaseSeconds: 0.7,
     ),
     PoseDefinition(
       poseId: 'glute_bridge_v1_06',
       order: 6,
       label: 'RETURN',
       instruction: 'Return to the starting position.',
-      approvedAsset: _gluteBridgeV1Asset('06_return'),
+      approvedAsset: _gluteBridgeV1Asset('F_06'),
       purpose: PosePurpose.returnPhase,
-      phaseSeconds: 0.7,
     ),
   ],
-  // Weighted 700/700/700/1100/700/700ms per frame (never an even split) —
-  // TOP held ~1.6x longer than a transitional frame so the glute-squeeze
-  // position is visible, matching Squat/Plank's hold convention. 4.6s per
-  // full cycle: smooth and controlled, not a fast GIF.
-  loopMode: LoopMode.timedCycle,
-  visualOrientation: ExerciseVisualOrientation.landscape,
-  visualAspectRatio: 600 / 400, // real Glute Bridge V1 frames
+  // Even continuous loop, matching the Squat/Lunges/Pushups V2 approach:
+  // 0.5s per frame x 6 frames = 3.0s per cycle, F_01->F_06 then a smooth
+  // wrap back to F_01 — no held/weighted frames.
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 3.0,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real Glute Bridge frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/glute_bridge/female/v1/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
   voiceScript: const VoiceScript(
     intro: 'Next: Glute Bridge.',
     benefit: 'Glute bridges strengthen your glutes, hamstrings, and core.',
@@ -2782,46 +2738,105 @@ final _birdDog = ExerciseDefinition(
   ),
 );
 
-/// EX002-EX006 have real catalog data but no verified Figma pose images
+/// EX003-EX006 have real catalog data but no verified Figma pose images
 /// yet — same status/rationale as EX013-EX016 above (see that block's
 /// doc). Added only so Bedtime Meditation's real 6-exercise sequence
 /// (EX001-EX006) can resolve every id through RoutinePlayer, the same way
 /// EX013-EX016 unblocked Core Crusher. Deep Breathing (EX001) already had
-/// a real, fully-verified RoutinePlayer definition before this — these 5
-/// are the ones that were missing, not it.
+/// a real, fully-verified RoutinePlayer definition before this — these 4
+/// are the ones that were missing, not it or EX002 (see below).
 ///
-/// EX002 specifically is now superseded: Bedtime Meditation's real
-/// "Full Body Stretch" slot uses the fully-verified `_fullBodyStretchV2`
-/// (id `EX061`) below instead — see that definition's doc comment for why
-/// a new id was minted rather than upgrading this placeholder in place.
-/// This EX002 definition is left exactly as it was, unreferenced by any
-/// production workout, purely so nothing that still resolves it directly
-/// by id (if anything does) breaks — except its displayName, which gets
-/// an "(Unverified)" suffix here so it no longer collides with EX061's
-/// identical display name and violates the app-wide "Tier 1 display
-/// names are unique" invariant. EX002 was never an approved exercise
-/// (approvedAsset is null below), so this isn't an edit to approved
-/// content, just a label disambiguation on an already-orphaned stub.
+/// EX002 — distinct from Bedtime Meditation's own "Full Body Stretch"
+/// (the fully-verified `_fullBodyStretchV2`, id `EX061`, below) — is the
+/// approved "Full Body Stretch — Cardio version" for Full Body Burn
+/// (package `GlowUp_Cardio_Next_Four_V2.zip`,
+/// `exercise/full_body_stretch/female/v2/` in the package, deployed at
+/// the app's own established `full_body_stretch/female/v1/` path — see
+/// the doc comment on `_gluteBridge` above for why the app-side folder is
+/// named "v1" despite the package's internal "v2" label). Kept on its
+/// existing id `EX002`, the id Full Body Burn's routine entry already
+/// referenced (never upgraded to a new id, unlike EX076 March In Place,
+/// per this pass's explicit "no new EX numbers" instruction). displayName
+/// is disambiguated to "Full Body Stretch
+/// (Cardio)" — not the plain "Full Body Stretch" — solely to satisfy the
+/// app-wide "Tier 1 display names are unique" invariant against EX061's
+/// identical name; the routine-detail list row still shows the clean,
+/// unqualified "Full Body Stretch" title (from the Tier 2 catalog's own
+/// `.name`, via the raw WorkoutExercise entry in workout_catalog.dart).
+/// EX061 (Bedtime's version) is a SEPARATE, untouched exercise — its own
+/// assets are currently missing on disk (a documented, separate,
+/// not-yet-fixed gap; explicitly out of scope for this pass) and this
+/// change does not touch it, borrow its assets, or fabricate anything for
+/// it.
+String _fullBodyStretchCardioAsset(String file) =>
+    'assets/glow_up/exercises/full_body_stretch/female/v1/$file.png';
+
 final _fullBodyStretch = ExerciseDefinition(
   id: 'EX002',
-  displayName: 'Full Body Stretch (Unverified)',
-  category: 'Bedtime',
+  displayName: 'Full Body Stretch (Cardio)',
+  category: 'Cardio',
   playbackType: 'SEQUENCE_LOOP',
   bodyAreas: const ['Full Body'],
   benefitShort:
       'Full Body Stretch lengthens and relaxes your whole body before rest.',
   durationSeconds: 45,
-  poses: const [
+  poses: [
     PoseDefinition(
-      poseId: 'full_body_stretch_01',
+      poseId: 'full_body_stretch_cardio_01',
       order: 1,
-      label: 'GO',
+      label: 'REACH',
       instruction: 'Reach and lengthen through your whole body.',
-      approvedAsset: null,
+      approvedAsset: _fullBodyStretchCardioAsset('F_01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'full_body_stretch_cardio_02',
+      order: 2,
+      label: 'EXTEND',
+      instruction: 'Extend through your arms and legs.',
+      approvedAsset: _fullBodyStretchCardioAsset('F_02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'full_body_stretch_cardio_03',
+      order: 3,
+      label: 'LENGTHEN',
+      instruction: 'Lengthen through your whole body.',
+      approvedAsset: _fullBodyStretchCardioAsset('F_03'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'full_body_stretch_cardio_04',
+      order: 4,
+      label: 'HOLD',
+      instruction: 'Hold the full stretch.',
+      approvedAsset: _fullBodyStretchCardioAsset('F_04'),
       purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'full_body_stretch_cardio_05',
+      order: 5,
+      label: 'RELEASE',
+      instruction: 'Release with control.',
+      approvedAsset: _fullBodyStretchCardioAsset('F_05'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'full_body_stretch_cardio_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Return to a relaxed starting position.',
+      approvedAsset: _fullBodyStretchCardioAsset('F_06'),
+      purpose: PosePurpose.returnPhase,
     ),
   ],
   loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 4.5, // 0.75s/frame x 6 frames — a slow, deliberate stretch
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real Full Body Stretch (Cardio) frames
+  previewAssetPath:
+      'assets/glow_up/exercises/full_body_stretch/female/v1/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
   voiceScript: const VoiceScript(
     intro: 'Next: Full Body Stretch.',
     benefit:
@@ -4566,7 +4581,8 @@ final _legsUpWallV2 = ExerciseDefinition(
   thumbnailFrameOrder: 4, // approved routine-card thumbnail is HOLD
   voiceScript: const VoiceScript(
     intro: 'Next: Legs Up Wall.',
-    benefit: 'Legs Up Wall relieves tired legs and calms your body before sleep.',
+    benefit:
+        'Legs Up Wall relieves tired legs and calms your body before sleep.',
     setupInstruction:
         'Sit sideways with one hip close to the wall, then lower onto your back and bring your feet up.',
     quarterCue: 'Straighten your legs comfortably up the wall.',
@@ -4681,7 +4697,8 @@ final _reclinedButterflyV2 = ExerciseDefinition(
   thumbnailFrameOrder: 4, // approved routine-card thumbnail is HOLD
   voiceScript: const VoiceScript(
     intro: 'Next: Reclined Butterfly.',
-    benefit: 'Reclined Butterfly gently opens your hips and relaxes your body before sleep.',
+    benefit:
+        'Reclined Butterfly gently opens your hips and relaxes your body before sleep.',
     setupInstruction:
         'Lie on your back, bring the soles of your feet together, and let your knees open gently.',
     quarterCue: 'Relax your hips and support your thighs if needed.',
@@ -4689,6 +4706,2201 @@ final _reclinedButterflyV2 = ExerciseDefinition(
       'Stay within a comfortable range. Never press your knees toward the floor.',
     ], // the "Halfway there." prefix is added by VoiceCoach itself
     finishCue: 'Use your hands if needed and bring your knees together slowly.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/neck_release/female/v2/EX068_F_0N_*.png`.
+/// Uniform 277x265 (confirmed before use).
+///
+/// The fourth Deep Sleep Prep exercise to get a real Tier 1 definition,
+/// after EX066 Legs Up Wall/EX067 Reclined Butterfly. "Neck Release"
+/// never had a Tier 2 legacy placeholder id at all — Deep Sleep Prep's
+/// EX034 slot (see workout_catalog.dart's prior doc comment) is what's
+/// being replaced here, not upgraded in place, same "next free id"
+/// convention as EX066/EX067.
+///
+/// Playback: `LoopMode.timedCycle` with phaseSeconds summing to exactly
+/// 30.0s (3+4+8+3+3... — actually 3+4+8+3+4+8 = 30.0s), the full exercise
+/// duration, so the sequence plays exactly once, never loops — the same
+/// "cycle length equals duration" mechanism already used by EX062/EX063/
+/// EX064 (right side first, CENTER_RESET at the exact halfway point,
+/// then left side). Standard (non-phase-synced) [VoiceScript] using
+/// [VoiceScript.switchSideCue] — no automated breathing narration, no
+/// per-pose voiceCue.
+///
+/// Safety: never instructs pulling the head with a hand (the approved
+/// cues explicitly say "without lifting the shoulder" / "hold only
+/// within a comfortable range") — matches `manifest.json`'s safety list.
+String _neckReleaseV2Asset(String file) =>
+    'assets/glow_up/exercises/neck_release/female/v2/EX068_F_$file.png';
+
+final _neckReleaseV2 = ExerciseDefinition(
+  id: 'EX068',
+  displayName: 'Neck Release',
+  category: 'Bedtime',
+  playbackType: 'SIDE_SEQUENCE',
+  bodyAreas: const ['Neck', 'Shoulders'],
+  benefitShort: 'Neck Release gently relieves tension before sleep.',
+  durationSeconds: 30,
+  poses: [
+    PoseDefinition(
+      poseId: 'neck_release_v2_01',
+      order: 1,
+      label: 'START',
+      instruction:
+          'Sit tall with your shoulders relaxed and your gaze forward.',
+      approvedAsset: _neckReleaseV2Asset('01_START'),
+      purpose: PosePurpose.setup,
+      phaseSeconds: 3,
+    ),
+    PoseDefinition(
+      poseId: 'neck_release_v2_02',
+      order: 2,
+      label: 'RIGHT TILT',
+      instruction:
+          'Slowly bring your right ear toward your right shoulder without lifting the shoulder.',
+      approvedAsset: _neckReleaseV2Asset('02_RIGHT_TILT'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 4,
+    ),
+    PoseDefinition(
+      poseId: 'neck_release_v2_03',
+      order: 3,
+      label: 'RIGHT HOLD',
+      instruction:
+          'Hold only within a comfortable range; keep both shoulders heavy.',
+      approvedAsset: _neckReleaseV2Asset('03_RIGHT_HOLD'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 8,
+    ),
+    PoseDefinition(
+      poseId: 'neck_release_v2_04',
+      order: 4,
+      label: 'CENTER RESET',
+      instruction: 'Return your head slowly to center.',
+      approvedAsset: _neckReleaseV2Asset('04_CENTER_RESET'),
+      purpose: PosePurpose.switchSide,
+      phaseSeconds: 3,
+    ),
+    PoseDefinition(
+      poseId: 'neck_release_v2_05',
+      order: 5,
+      label: 'LEFT TILT',
+      instruction:
+          'Slowly bring your left ear toward your left shoulder without lifting the shoulder.',
+      approvedAsset: _neckReleaseV2Asset('05_LEFT_TILT'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 4,
+    ),
+    PoseDefinition(
+      poseId: 'neck_release_v2_06',
+      order: 6,
+      label: 'LEFT HOLD',
+      instruction:
+          'Hold gently, then prepare to return to neutral when the timer ends.',
+      approvedAsset: _neckReleaseV2Asset('06_LEFT_HOLD'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 8,
+    ),
+  ],
+  loopMode: LoopMode.timedCycle,
+  visualOrientation: ExerciseVisualOrientation.square,
+  visualAspectRatio: 277 / 265, // real Neck Release V2 frames
+  crossfadeFrames: false,
+  thumbnailFrameOrder: 1, // approved routine-card thumbnail is START
+  voiceScript: const VoiceScript(
+    intro: 'Next: Neck Release.',
+    benefit: 'Neck Release gently relieves tension before sleep.',
+    setupInstruction:
+        'Sit tall with your shoulders relaxed, then slowly bring your right ear toward your right shoulder.',
+    switchSideCue:
+        'Return to center. Now bring your left ear toward your left shoulder.',
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/box_breathing/female/v2/EX069_F_0N_*.png`.
+/// Uniform 277x265 (confirmed before use).
+///
+/// The final Deep Sleep Prep exercise to get a real Tier 1 definition —
+/// with this one implemented, all four Deep Sleep Prep exercises
+/// (EX066-EX069) resolve through Tier 1, which is what flips the whole
+/// routine over to RoutinePlayer in `_routinePlayerRoutineFor` (see
+/// app_router.dart) — no per-workout code change needed for that, it's
+/// the same all-or-nothing gate every other routine already uses.
+///
+/// Playback: first live use of the new [LoopMode.timedCycleAfterSetup].
+/// SETTLE (`PosePurpose.setup`) plays once for [loopCycleSeconds] (2.0s);
+/// the remaining five poses then repeat as the real box-breathing cycle —
+/// INHALE_BEGIN(2.0)+INHALE_FULL(2.0) = the approved 4s inhale,
+/// HOLD_FULL(4.0), EXHALE(4.0), HOLD_EMPTY_RESET(4.0) — summing to
+/// exactly the approved `breathPattern.cycleSeconds: 16`. Deliberately
+/// NOT [LoopMode.timedCycle] (Deep Breathing's mechanism): that restarts
+/// the *whole* pose list, settle frame included, every lap, which would
+/// inflate the cycle to 18.0s and drift from the approved 16.0s box
+/// pattern. The 60s exercise duration is not an exact multiple of 16s
+/// (3.625 cycles) — the cycle is simply cut off wherever it is when the
+/// exercise's own ACTIVE-phase duration timer ends (the same generic
+/// timer every exercise already uses), so it always stops cleanly at
+/// exactly 60s without a special-cased overrun guard.
+///
+/// Voice: `phaseSyncedVoice: true` (this app's second legitimate use,
+/// after Deep Breathing) — each phase speaks its cue exactly once, on
+/// entry, never repeating mid-phase and never a generic "breathe in/
+/// breathe out" loop. The approved cue text itself states the count
+/// ("...for four counts") once per phase, spoken in sync with that
+/// phase's start — INHALE_FULL is deliberately silent (a continuation of
+/// the inhale already announced by INHALE_BEGIN), matching Deep
+/// Breathing's own "only 2 of 6 poses speak" convention.
+String _boxBreathingV2Asset(String file) =>
+    'assets/glow_up/exercises/box_breathing/female/v2/EX069_F_$file.png';
+
+final _boxBreathingV2 = ExerciseDefinition(
+  id: 'EX069',
+  displayName: 'Box Breathing',
+  category: 'Bedtime',
+  playbackType: 'BREATHING',
+  bodyAreas: const ['Lungs', 'Nervous System'],
+  benefitShort: 'Box Breathing calms your body and mind before sleep.',
+  durationSeconds: 60,
+  poses: [
+    PoseDefinition(
+      poseId: 'box_breathing_v2_01',
+      order: 1,
+      label: 'SETTLE',
+      instruction: 'Sit comfortably and let your shoulders soften.',
+      approvedAsset: _boxBreathingV2Asset('01_SETTLE'),
+      purpose: PosePurpose.setup,
+      phaseSeconds: 2,
+      voiceCue: 'Sit comfortably and let your shoulders soften.',
+      cuesOnlyVoiceCue: 'Settle.',
+    ),
+    PoseDefinition(
+      poseId: 'box_breathing_v2_02',
+      order: 2,
+      label: 'INHALE BEGIN',
+      instruction: 'Inhale gently through your nose for four counts.',
+      approvedAsset: _boxBreathingV2Asset('02_INHALE_BEGIN'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 2,
+      voiceCue: 'Inhale gently through your nose for four counts.',
+      cuesOnlyVoiceCue: 'Inhale.',
+    ),
+    PoseDefinition(
+      poseId: 'box_breathing_v2_03',
+      order: 3,
+      label: 'INHALE FULL',
+      instruction: 'Finish the inhale without lifting your shoulders.',
+      approvedAsset: _boxBreathingV2Asset('03_INHALE_FULL'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 2,
+    ),
+    PoseDefinition(
+      poseId: 'box_breathing_v2_04',
+      order: 4,
+      label: 'HOLD FULL',
+      instruction: 'Hold softly for four counts; do not strain.',
+      approvedAsset: _boxBreathingV2Asset('04_HOLD_FULL'),
+      purpose: PosePurpose.hold,
+      phaseSeconds: 4,
+      voiceCue: 'Hold softly for four counts; do not strain.',
+      cuesOnlyVoiceCue: 'Hold.',
+    ),
+    PoseDefinition(
+      poseId: 'box_breathing_v2_05',
+      order: 5,
+      label: 'EXHALE',
+      instruction: 'Exhale slowly and comfortably for four counts.',
+      approvedAsset: _boxBreathingV2Asset('05_EXHALE'),
+      purpose: PosePurpose.returnPhase,
+      phaseSeconds: 4,
+      voiceCue: 'Exhale slowly and comfortably for four counts.',
+      cuesOnlyVoiceCue: 'Exhale.',
+    ),
+    PoseDefinition(
+      poseId: 'box_breathing_v2_06',
+      order: 6,
+      label: 'HOLD EMPTY RESET',
+      instruction: 'Pause gently for four counts, then begin the next cycle.',
+      approvedAsset: _boxBreathingV2Asset('06_HOLD_EMPTY_RESET'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 4,
+      voiceCue: 'Pause gently for four counts, then begin the next cycle.',
+      cuesOnlyVoiceCue: 'Hold.',
+    ),
+  ],
+  loopMode: LoopMode.timedCycleAfterSetup,
+  loopCycleSeconds:
+      2, // SETTLE's own phaseSeconds — the one-time entry before the cycle
+  visualOrientation: ExerciseVisualOrientation.square,
+  visualAspectRatio: 277 / 265, // real Box Breathing V2 frames
+  phaseSyncedVoice:
+      true, // per-phase cues fired on entry, not the generic workout countdown cues
+  thumbnailFrameOrder: 1, // approved routine-card thumbnail is SETTLE
+  voiceScript: const VoiceScript(
+    intro: 'Next: Box Breathing.',
+    benefit: 'Box Breathing calms your body and mind before sleep.',
+    setupInstruction:
+        'Sit comfortably and let your shoulders soften. Breathe at your own pace — shorten the holds or '
+        'return to normal breathing if you feel dizzy, short of breath or uncomfortable.',
+    finishCue: 'Let your breathing return to normal.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/shoulder_rolls/female/v2/F_0N.png`. Portrait
+/// full-body frames, ~320x818 (minor per-frame variance, confirmed before
+/// use — same "near-uniform" tolerance already accepted for other sets
+/// like Sun Salutation). `sequence_preview.png` in the same folder is a
+/// separate wide filmstrip composite (1922x818, all six poses side by
+/// side) meant only for the routine-detail thumbnail, never a seventh
+/// pose frame — wired via [WorkoutExercise.thumbnailAssetPath], not
+/// [poses].
+///
+/// The first Mobility Reset exercise to get a real Tier 1 definition.
+/// "Shoulder Rolls" already has an internal Tier 2 placeholder at id
+/// `EX036` (`exercise_catalog.dart`) — assigned the next free id (EX070,
+/// after EX069 Box Breathing) rather than upgrading EX036 in place, the
+/// same convention as every other V2 exercise added so far. EX036 itself
+/// is untouched.
+///
+/// Playback: `LoopMode.continuousLoop` — a genuine repeating loop (not
+/// the Tier 2 legacy screen's one-pass proportional split), matching the
+/// approved "F_01 -> F_02 -> ... -> F_06 -> repeat" spec exactly.
+/// [loopCycleSeconds] 3.0s per full lap (0.5s/frame) x 10 laps across the
+/// 30s duration — a smooth, gentle pace appropriate for a shoulder-roll
+/// mobility drill, not a fast workout cadence.
+///
+/// Per-pose `instruction` text is sliced directly from the one approved
+/// exercise instruction ("Stand tall... roll them backward... lower them
+/// down... continue in a smooth circle") — no per-frame copy was
+/// separately approved (unlike the Deep Sleep Prep exercises' manifest.
+/// json files), so no new claims are invented beyond that one sentence.
+String _shoulderRollsV2Asset(String file) =>
+    'assets/glow_up/exercises/shoulder_rolls/female/v2/F_$file.png';
+
+final _shoulderRollsV2 = ExerciseDefinition(
+  id: 'EX070',
+  displayName: 'Shoulder Rolls',
+  category: 'Mobility',
+  playbackType: 'SEQUENCE_LOOP',
+  bodyAreas: const ['Shoulders', 'Upper Back'],
+  benefitShort: 'Releases shoulder tension and improves upper-body mobility.',
+  durationSeconds: 30,
+  poses: [
+    PoseDefinition(
+      poseId: 'shoulder_rolls_v2_01',
+      order: 1,
+      label: 'STAND TALL',
+      instruction: 'Stand tall with your arms relaxed at your sides.',
+      approvedAsset: _shoulderRollsV2Asset('01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'shoulder_rolls_v2_02',
+      order: 2,
+      label: 'LIFT',
+      instruction: 'Slowly lift your shoulders toward your ears.',
+      approvedAsset: _shoulderRollsV2Asset('02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'shoulder_rolls_v2_03',
+      order: 3,
+      label: 'ROLL BACK',
+      instruction: 'Roll your shoulders backward.',
+      approvedAsset: _shoulderRollsV2Asset('03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'shoulder_rolls_v2_04',
+      order: 4,
+      label: 'LOWER',
+      instruction: 'Lower your shoulders back down.',
+      approvedAsset: _shoulderRollsV2Asset('04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'shoulder_rolls_v2_05',
+      order: 5,
+      label: 'CIRCLE',
+      instruction: 'Continue in a smooth circle.',
+      approvedAsset: _shoulderRollsV2Asset('05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'shoulder_rolls_v2_06',
+      order: 6,
+      label: 'CIRCLE CONTINUE',
+      instruction: 'Keep the circle smooth as you continue.',
+      approvedAsset: _shoulderRollsV2Asset('06'),
+      purpose: PosePurpose.transition,
+    ),
+  ],
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds:
+      3.0, // 0.5s/frame x 6 frames — a smooth, gentle roll, ~10 laps across 30s
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 320 / 818, // real Shoulder Rolls V2 frames
+  thumbnailFrameOrder: 1,
+  previewAssetPath:
+      'assets/glow_up/exercises/shoulder_rolls/female/v2/sequence_preview.png',
+  previewAspectRatio: 1922 / 818,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Shoulder Rolls.',
+    benefit: 'Releases shoulder tension and improves upper-body mobility.',
+    setupInstruction:
+        'Relax your arms and slowly roll your shoulders backward.',
+    formCues: [
+      'Keep the movement slow and relaxed.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/arm_circles/female/v2/F_0N.png`. Portrait
+/// full-body frames, ~304x863 (minor per-frame variance, confirmed before
+/// use). `sequence_preview.png` is the same kind of wide filmstrip
+/// composite as Shoulder Rolls' — routine-detail thumbnail only, never a
+/// pose frame.
+///
+/// The second Mobility Reset exercise to get a real Tier 1 definition.
+/// "Arm Circles" already has an internal Tier 2 placeholder at id `EX037`
+/// — assigned the next free id (EX071) rather than upgrading EX037 in
+/// place, same convention as EX070. EX037 itself is untouched.
+///
+/// Playback: `LoopMode.continuousLoop`, [loopCycleSeconds] 3.6s per full
+/// lap (0.6s/frame) x ~8.3 laps across the 30s duration — slightly slower
+/// than Shoulder Rolls' pace, appropriate for a larger, slower arm
+/// circle. Per-pose `instruction` text is sliced directly from the one
+/// approved exercise instruction, same reasoning as EX070.
+String _armCirclesV2Asset(String file) =>
+    'assets/glow_up/exercises/arm_circles/female/v2/F_$file.png';
+
+final _armCirclesV2 = ExerciseDefinition(
+  id: 'EX071',
+  displayName: 'Arm Circles',
+  category: 'Mobility',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Shoulders', 'Arms'],
+  benefitShort:
+      'Warms up the shoulders and improves arm and shoulder mobility.',
+  durationSeconds: 30,
+  poses: [
+    PoseDefinition(
+      poseId: 'arm_circles_v2_01',
+      order: 1,
+      label: 'START',
+      instruction: 'Stand tall and extend both arms out from your sides.',
+      approvedAsset: _armCirclesV2Asset('01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'arm_circles_v2_02',
+      order: 2,
+      label: 'CIRCLE UP',
+      instruction: 'Make slow, controlled circles.',
+      approvedAsset: _armCirclesV2Asset('02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'arm_circles_v2_03',
+      order: 3,
+      label: 'CIRCLE FORWARD',
+      instruction: 'Keep your torso stable.',
+      approvedAsset: _armCirclesV2Asset('03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'arm_circles_v2_04',
+      order: 4,
+      label: 'CIRCLE DOWN',
+      instruction: 'Keep your shoulders relaxed.',
+      approvedAsset: _armCirclesV2Asset('04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'arm_circles_v2_05',
+      order: 5,
+      label: 'CIRCLE BACK',
+      instruction: 'Continue the slow, controlled circles.',
+      approvedAsset: _armCirclesV2Asset('05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'arm_circles_v2_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Keep your torso stable and shoulders relaxed.',
+      approvedAsset: _armCirclesV2Asset('06'),
+      purpose: PosePurpose.transition,
+    ),
+  ],
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds:
+      3.6, // 0.6s/frame x 6 frames — slower, controlled circles, ~8.3 laps across 30s
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 304 / 863, // real Arm Circles V2 frames
+  thumbnailFrameOrder: 1,
+  previewAssetPath:
+      'assets/glow_up/exercises/arm_circles/female/v2/sequence_preview.png',
+  previewAspectRatio: 1823 / 863,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Arm Circles.',
+    benefit: 'Warms up the shoulders and improves arm and shoulder mobility.',
+    setupInstruction: 'Extend your arms and make slow, controlled circles.',
+    formCues: [
+      'Keep your shoulders relaxed and continue with controlled circles.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/wrist_circles/female/v2/F_0N.png`. Portrait
+/// full-body frames, ~304x862 (confirmed before use). `sequence_preview.
+/// png` is the same kind of wide filmstrip composite as every other
+/// Mobility exercise's — routine-detail/rest-screen thumbnail only, never
+/// a pose frame, never the active-exercise animation.
+///
+/// The third Mobility Reset exercise to get a real Tier 1 definition.
+/// "Wrist Circles" already has an internal Tier 2 placeholder at id
+/// `EX038` (`exercise_catalog.dart`) — assigned the next free id (EX072)
+/// rather than upgrading EX038 in place, same convention as every other
+/// V2 exercise added so far. EX038 itself is untouched. Per-pose
+/// instruction text is derived from EX038's own existing approved
+/// placeholder copy ("Rotate your wrists slowly in each direction.") —
+/// no new exercise-science claim invented, same reasoning documented on
+/// EX070/EX071/EX074/EX075.
+///
+/// Playback: `LoopMode.continuousLoop`, [loopCycleSeconds] 2.4s per full
+/// lap (0.4s/frame) x ~8.3 laps across the 20s duration — a quick, small
+/// joint-mobility pace appropriate for the wrists.
+String _wristCirclesV2Asset(String file) =>
+    'assets/glow_up/exercises/wrist_circles/female/v2/F_$file.png';
+
+final _wristCirclesV2 = ExerciseDefinition(
+  id: 'EX072',
+  displayName: 'Wrist Circles',
+  category: 'Mobility',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Wrists', 'Forearms'],
+  benefitShort: 'Loosens the wrists and improves hand and forearm mobility.',
+  durationSeconds: 20,
+  poses: [
+    PoseDefinition(
+      poseId: 'wrist_circles_v2_01',
+      order: 1,
+      label: 'START',
+      instruction:
+          'Stand or sit comfortably and extend your arms in front of you.',
+      approvedAsset: _wristCirclesV2Asset('01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'wrist_circles_v2_02',
+      order: 2,
+      label: 'CIRCLE OUT',
+      instruction: 'Rotate your wrists slowly outward.',
+      approvedAsset: _wristCirclesV2Asset('02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'wrist_circles_v2_03',
+      order: 3,
+      label: 'CIRCLE FORWARD',
+      instruction: 'Continue the circle with control.',
+      approvedAsset: _wristCirclesV2Asset('03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'wrist_circles_v2_04',
+      order: 4,
+      label: 'CIRCLE IN',
+      instruction: 'Rotate your wrists slowly in the other direction.',
+      approvedAsset: _wristCirclesV2Asset('04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'wrist_circles_v2_05',
+      order: 5,
+      label: 'CIRCLE BACK',
+      instruction: 'Keep the circles small and gentle.',
+      approvedAsset: _wristCirclesV2Asset('05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'wrist_circles_v2_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Continue the gentle circle before the next lap.',
+      approvedAsset: _wristCirclesV2Asset('06'),
+      purpose: PosePurpose.transition,
+    ),
+  ],
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds:
+      2.4, // 0.4s/frame x 6 frames — small, quick wrist circles, ~8.3 laps across 20s
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 304 / 862, // real Wrist Circles V2 frames
+  thumbnailFrameOrder: 1,
+  previewAssetPath:
+      'assets/glow_up/exercises/wrist_circles/female/v2/sequence_preview.png',
+  previewAspectRatio: 1824 / 862,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Wrist Circles.',
+    benefit: 'Loosens the wrists and improves hand and forearm mobility.',
+    setupInstruction: 'Rotate your wrists slowly in each direction.',
+    formCues: [
+      'Keep the movement small and controlled.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/hip_circles/female/v2/F_0N.png`. Portrait
+/// full-body frames, ~304x864 (confirmed before use). `sequence_preview.
+/// png` is the same kind of wide filmstrip composite as every other
+/// Mobility exercise's — routine-detail/rest-screen thumbnail only, never
+/// a pose frame, never the active-exercise animation.
+///
+/// The fourth Mobility Reset exercise to get a real Tier 1 definition.
+/// "Hip Circles" already has an internal Tier 2 placeholder at id `EX039`
+/// — assigned the next free id (EX073) rather than upgrading EX039 in
+/// place. EX039 itself is untouched. Per-pose instruction text is derived
+/// from EX039's own existing approved placeholder copy ("Circle your
+/// hips slowly in each direction.") — no new exercise-science claim
+/// invented, same reasoning documented on EX070/EX071/EX072/EX074/EX075.
+///
+/// Playback: `LoopMode.continuousLoop`, [loopCycleSeconds] 3.6s per full
+/// lap (0.6s/frame) x ~8.3 laps across the 30s duration.
+String _hipCirclesV2Asset(String file) =>
+    'assets/glow_up/exercises/hip_circles/female/v2/F_$file.png';
+
+final _hipCirclesV2 = ExerciseDefinition(
+  id: 'EX073',
+  displayName: 'Hip Circles',
+  category: 'Mobility',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Hips', 'Lower Back'],
+  benefitShort: 'Loosens the hips and improves lower-body mobility.',
+  durationSeconds: 30,
+  poses: [
+    PoseDefinition(
+      poseId: 'hip_circles_v2_01',
+      order: 1,
+      label: 'START',
+      instruction:
+          'Stand with your feet hip-width apart and hands on your hips.',
+      approvedAsset: _hipCirclesV2Asset('01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'hip_circles_v2_02',
+      order: 2,
+      label: 'CIRCLE FORWARD',
+      instruction: 'Circle your hips slowly forward.',
+      approvedAsset: _hipCirclesV2Asset('02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'hip_circles_v2_03',
+      order: 3,
+      label: 'CIRCLE SIDE',
+      instruction: 'Continue the circle to the side.',
+      approvedAsset: _hipCirclesV2Asset('03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'hip_circles_v2_04',
+      order: 4,
+      label: 'CIRCLE BACK',
+      instruction: 'Circle your hips slowly backward.',
+      approvedAsset: _hipCirclesV2Asset('04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'hip_circles_v2_05',
+      order: 5,
+      label: 'CIRCLE SIDE',
+      instruction: 'Continue the circle to the other side.',
+      approvedAsset: _hipCirclesV2Asset('05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'hip_circles_v2_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Keep the circle smooth as you continue.',
+      approvedAsset: _hipCirclesV2Asset('06'),
+      purpose: PosePurpose.transition,
+    ),
+  ],
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds:
+      3.6, // 0.6s/frame x 6 frames — slower hip-scale circles, ~8.3 laps across 30s
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 304 / 864, // real Hip Circles V2 frames
+  thumbnailFrameOrder: 1,
+  previewAssetPath:
+      'assets/glow_up/exercises/hip_circles/female/v2/sequence_preview.png',
+  previewAspectRatio: 1821 / 864,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Hip Circles.',
+    benefit: 'Loosens the hips and improves lower-body mobility.',
+    setupInstruction: 'Circle your hips slowly in each direction.',
+    formCues: [
+      'Keep your movements slow and controlled.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/thoracic_rotation/female/v2/F_0N.png`.
+/// Portrait full-body frames, ~320x819 (confirmed before use).
+/// `sequence_preview.png` is the same kind of wide filmstrip composite as
+/// every other Mobility exercise's — routine-detail thumbnail only, never
+/// a pose frame.
+///
+/// The fifth Mobility Reset exercise to get a real Tier 1 definition,
+/// after EX070 Shoulder Rolls/EX071 Arm Circles. "Thoracic Rotation"
+/// already has an internal Tier 2 placeholder at id `EX040`
+/// (`exercise_catalog.dart`) — assigned the next free id (EX074, after
+/// EX071 Arm Circles) rather than upgrading EX040 in place, same
+/// convention as every other V2 exercise added so far. EX040 itself is
+/// untouched.
+///
+/// Playback: `LoopMode.continuousLoop` — the six approved frames already
+/// encode one complete left-right cycle on their own (NEUTRAL -> LEFT ->
+/// DEEPER_LEFT -> NEUTRAL -> RIGHT -> DEEPER_RIGHT), so a plain forward
+/// loop (F_06 wrapping to F_01, both a neutral/return-to-center position)
+/// reads as a smooth continuous side-to-side motion with no visible jump
+/// — the "restart at F_01" option explicitly allowed by the approved
+/// spec, chosen over `LoopMode.reversibleCycle` because reversing on top
+/// of a sequence that already reverses itself (left then right) would
+/// revisit frames out of physical order. [loopCycleSeconds] 4.2s per full
+/// lap (0.7s/frame) x ~8.3 laps across the 35s duration — a slow,
+/// deliberate rotation pace.
+///
+/// No image is ever flipped/mirrored programmatically — [PoseDefinition.
+/// approvedAsset] always points straight at the one approved PNG for
+/// that frame, same as every other exercise.
+String _thoracicRotationV2Asset(String file) =>
+    'assets/glow_up/exercises/thoracic_rotation/female/v2/F_$file.png';
+
+final _thoracicRotationV2 = ExerciseDefinition(
+  id: 'EX074',
+  displayName: 'Thoracic Rotation',
+  category: 'Mobility',
+  playbackType: 'SIDE_SEQUENCE',
+  bodyAreas: const ['Upper Back', 'Spine', 'Shoulders'],
+  benefitShort:
+      'Improves upper-back mobility and reduces stiffness through the spine and shoulders.',
+  durationSeconds: 35,
+  poses: [
+    PoseDefinition(
+      poseId: 'thoracic_rotation_v2_01',
+      order: 1,
+      label: 'NEUTRAL',
+      instruction:
+          'Stand with your feet slightly wider than hip-width and bend your knees softly.',
+      approvedAsset: _thoracicRotationV2Asset('01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'thoracic_rotation_v2_02',
+      order: 2,
+      label: 'LEFT ROTATION',
+      instruction:
+          'Hold your hands together at chest level and rotate your upper body to the left.',
+      approvedAsset: _thoracicRotationV2Asset('02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'thoracic_rotation_v2_03',
+      order: 3,
+      label: 'DEEPER LEFT ROTATION',
+      instruction:
+          'Keep your hips and feet facing forward as you rotate a little deeper.',
+      approvedAsset: _thoracicRotationV2Asset('03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'thoracic_rotation_v2_04',
+      order: 4,
+      label: 'NEUTRAL',
+      instruction: 'Return your upper body to center.',
+      approvedAsset: _thoracicRotationV2Asset('04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'thoracic_rotation_v2_05',
+      order: 5,
+      label: 'RIGHT ROTATION',
+      instruction: 'Rotate your upper body to the right.',
+      approvedAsset: _thoracicRotationV2Asset('05'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'thoracic_rotation_v2_06',
+      order: 6,
+      label: 'DEEPER RIGHT ROTATION',
+      instruction:
+          'Keep your hips and feet facing forward as you rotate a little deeper.',
+      approvedAsset: _thoracicRotationV2Asset('06'),
+      purpose: PosePurpose.active,
+    ),
+  ],
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds:
+      4.2, // 0.7s/frame x 6 frames — a slow, deliberate rotation, ~8.3 laps across 35s
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 320 / 819, // real Thoracic Rotation V2 frames
+  thumbnailFrameOrder: 1,
+  previewAssetPath:
+      'assets/glow_up/exercises/thoracic_rotation/female/v2/sequence_preview.png',
+  previewAspectRatio: 1920 / 819,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Thoracic Rotation.',
+    benefit:
+        'Improves upper-back mobility and reduces stiffness through the spine and shoulders.',
+    setupInstruction:
+        'Keep your hips forward and slowly rotate your upper body from side to side.',
+    formCues: [
+      'Keep your feet planted and rotate gently through your upper back.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/knee_circles/female/v2/F_0N.png`. Portrait
+/// full-body frames, ~326x804 (confirmed before use). `sequence_preview.
+/// png` is the same kind of wide filmstrip composite as every other
+/// Mobility exercise's — routine-detail thumbnail only, never a pose
+/// frame.
+///
+/// The sixth and final Mobility Reset exercise to get a real Tier 1
+/// definition — with this one implemented, EX070/EX071/EX074/EX075 all
+/// resolve through Tier 1, though Mobility Reset already reaches
+/// RoutinePlayer regardless (per-exercise resolution, not the all-or-
+/// nothing gate) — Wrist Circles/Hip Circles remain the only pending
+/// slots, shown as the honest ASSET_PENDING_APPROVAL stand-in. "Knee
+/// Circles" already has an internal Tier 2 placeholder at id `EX041` —
+/// assigned the next free id (EX075) rather than upgrading EX041 in
+/// place. EX041 itself is untouched.
+///
+/// Playback: `LoopMode.continuousLoop`, [loopCycleSeconds] 3.0s per full
+/// lap (0.5s/frame) x ~8.3 laps across the 25s duration — small, gentle,
+/// controlled circles, matching the approved "do not enlarge the
+/// movement beyond what the approved frames show" instruction (never
+/// exaggerated by the engine — it only ever displays the real approved
+/// frames, at a steady pace, never scaled/zoomed).
+String _kneeCirclesV2Asset(String file) =>
+    'assets/glow_up/exercises/knee_circles/female/v2/F_$file.png';
+
+final _kneeCirclesV2 = ExerciseDefinition(
+  id: 'EX075',
+  displayName: 'Knee Circles',
+  category: 'Mobility',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Knees', 'Lower Body'],
+  benefitShort:
+      'Gently warms the knees and improves lower-body joint mobility.',
+  durationSeconds: 25,
+  poses: [
+    PoseDefinition(
+      poseId: 'knee_circles_v2_01',
+      order: 1,
+      label: 'START',
+      instruction: 'Stand with your feet and knees together.',
+      approvedAsset: _kneeCirclesV2Asset('01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'knee_circles_v2_02',
+      order: 2,
+      label: 'BEND',
+      instruction:
+          'Bend your knees slightly and place your hands just above them.',
+      approvedAsset: _kneeCirclesV2Asset('02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'knee_circles_v2_03',
+      order: 3,
+      label: 'CIRCLE RIGHT',
+      instruction: 'Guide both knees through a small, gentle circle.',
+      approvedAsset: _kneeCirclesV2Asset('03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'knee_circles_v2_04',
+      order: 4,
+      label: 'CIRCLE FORWARD',
+      instruction: 'Keep your feet planted as the circle continues.',
+      approvedAsset: _kneeCirclesV2Asset('04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'knee_circles_v2_05',
+      order: 5,
+      label: 'CIRCLE LEFT',
+      instruction: 'Keep the circle small and controlled.',
+      approvedAsset: _kneeCirclesV2Asset('05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'knee_circles_v2_06',
+      order: 6,
+      label: 'CIRCLE BACK',
+      instruction: 'Continue the gentle circle before the next lap.',
+      approvedAsset: _kneeCirclesV2Asset('06'),
+      purpose: PosePurpose.transition,
+    ),
+  ],
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds:
+      3.0, // 0.5s/frame x 6 frames — small, gentle circles, ~8.3 laps across 25s
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real Knee Circles V2 frames
+  thumbnailFrameOrder: 1,
+  previewAssetPath:
+      'assets/glow_up/exercises/knee_circles/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Knee Circles.',
+    benefit: 'Gently warms the knees and improves lower-body joint mobility.',
+    setupInstruction:
+        'Keep your feet planted and guide both knees through small gentle circles.',
+    formCues: [
+      'Keep the movement small, gentle, and controlled.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/march_in_place/female/v2/F_0N.png` — refreshed
+/// by the `GlowUp_Cardio_Next_Four_V2.zip` approved package (same v2
+/// folder, replacing the earlier ~304x864 set with a new 326x804 set that
+/// matches the shared "lavender uniform Glow Up Cardio" ratio used by
+/// Squat/Lunges/Pushups/Glute Bridge/Full Body Stretch/High Knees).
+/// `sequence_preview.png` is the same kind of wide filmstrip composite as
+/// every other V2 exercise's — routine-detail/rest-screen preview only,
+/// never a pose frame, never the active-exercise animation.
+///
+/// The first newly-approved Cardio exercise. "March In Place" already has
+/// an internal Tier 2 placeholder at id `EX042` (`exercise_catalog.dart`)
+/// — assigned the next free id overall (EX076, after EX075 Knee Circles)
+/// rather than upgrading EX042 in place, same convention as every other
+/// V2 exercise added so far. EX042 itself is untouched.
+///
+/// Playback: `LoopMode.continuousLoop` — a genuine repeating loop
+/// matching the approved "F_01 -> ... -> F_06 -> repeat" spec exactly.
+/// [loopCycleSeconds] 3.2s per full lap (~0.53s/frame) x ~12.5 laps
+/// across the 40s duration — a steady marching cadence.
+///
+/// Voice: standard (non-phase-synced) [VoiceScript]. The approved
+/// "Ten seconds remaining. Keep your posture tall." cue is NOT wired in —
+/// [VoiceEvent.timeRemaining10] is a fixed, engine-wide "10 seconds
+/// left." string (`voice_coach.dart`), the same generic mechanism every
+/// other exercise's 10-second cue already uses; customizing it per
+/// exercise would mean changing that shared lookup for every exercise in
+/// the app, well beyond this exercise's scope. Flagged as a real,
+/// documented gap, not silently dropped.
+String _marchInPlaceV2Asset(String file) =>
+    'assets/glow_up/exercises/march_in_place/female/v2/F_$file.png';
+
+final _marchInPlaceV2 = ExerciseDefinition(
+  id: 'EX076',
+  displayName: 'March In Place',
+  category: 'Cardio',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Hips', 'Legs', 'Shoulders', 'Cardio'],
+  benefitShort:
+      'Raises your heart rate gently while warming up the hips, legs, and shoulders.',
+  durationSeconds: 40,
+  poses: [
+    PoseDefinition(
+      poseId: 'march_in_place_v2_01',
+      order: 1,
+      label: 'NEUTRAL STANCE',
+      instruction: 'Stand tall with your core engaged.',
+      approvedAsset: _marchInPlaceV2Asset('01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'march_in_place_v2_02',
+      order: 2,
+      label: 'FIRST KNEE LIFT',
+      instruction: 'Lift one knee while swinging the opposite arm naturally.',
+      approvedAsset: _marchInPlaceV2Asset('02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'march_in_place_v2_03',
+      order: 3,
+      label: 'FIRST FOOT LOWERING',
+      instruction: 'Land softly as you lower your foot.',
+      approvedAsset: _marchInPlaceV2Asset('03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'march_in_place_v2_04',
+      order: 4,
+      label: 'NEUTRAL TRANSITION',
+      instruction: 'Return to a tall, neutral stance.',
+      approvedAsset: _marchInPlaceV2Asset('04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'march_in_place_v2_05',
+      order: 5,
+      label: 'OPPOSITE KNEE LIFT',
+      instruction: 'Lift the opposite knee while swinging the other arm.',
+      approvedAsset: _marchInPlaceV2Asset('05'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'march_in_place_v2_06',
+      order: 6,
+      label: 'OPPOSITE FOOT LOWERING',
+      instruction: 'Land softly and prepare for the next step.',
+      approvedAsset: _marchInPlaceV2Asset('06'),
+      purpose: PosePurpose.active,
+    ),
+  ],
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds:
+      3.2, // ~0.53s/frame x 6 frames — a steady marching cadence, ~12.5 laps across 40s
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real March In Place V2 frames (refreshed)
+  thumbnailFrameOrder: 1,
+  previewAssetPath:
+      'assets/glow_up/exercises/march_in_place/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: March In Place.',
+    benefit:
+        'Raises your heart rate gently while warming up the hips, legs, and shoulders.',
+    setupInstruction:
+        'Stand tall, lift one knee at a time, and swing the opposite arm.',
+    formCues: [
+      'Keep marching with a steady rhythm and land softly.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Approved High Knees sequence — uniform lavender Glow Up Cardio visual
+/// system (package `GlowUp_Cardio_Next_Four_V2.zip`,
+/// `exercise/high_knees/female/v2/`). Reuses id `EX043` — the id HIIT
+/// Cardio Blast's routine entry already referenced (never a new id, per
+/// this pass's explicit "no new EX numbers" instruction) — unlike EX076
+/// March In Place, which minted a new id in an earlier pass; this
+/// exercise instead follows the more common convention already used for
+/// Squat/Lunges/Pushups/Glute Bridge, where the same id is shared across
+/// both tiers. The legacy Tier 2 catalog entry (`exercise_catalog.dart`)
+/// already carries the correct name/category/duration; nothing there
+/// needed to change.
+String _highKneesAsset(String file) =>
+    'assets/glow_up/exercises/high_knees/female/v2/$file.png';
+
+final _highKnees = ExerciseDefinition(
+  id: 'EX043',
+  displayName: 'High Knees',
+  category: 'Cardio',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Legs', 'Core', 'Cardio'],
+  benefitShort: 'Raises your heart rate while working your legs and core.',
+  durationSeconds: 35,
+  poses: [
+    PoseDefinition(
+      poseId: 'high_knees_01',
+      order: 1,
+      label: 'STAND',
+      instruction: 'Stand tall with your core engaged.',
+      approvedAsset: _highKneesAsset('F_01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'high_knees_02',
+      order: 2,
+      label: 'DRIVE KNEE UP',
+      instruction: 'Drive one knee up toward your chest.',
+      approvedAsset: _highKneesAsset('F_02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'high_knees_03',
+      order: 3,
+      label: 'KNEE AT PEAK',
+      instruction: 'Bring your knee as high as you can, quickly.',
+      approvedAsset: _highKneesAsset('F_03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'high_knees_04',
+      order: 4,
+      label: 'SWITCH DOWN',
+      instruction: 'Land softly and switch legs.',
+      approvedAsset: _highKneesAsset('F_04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'high_knees_05',
+      order: 5,
+      label: 'OPPOSITE KNEE UP',
+      instruction: 'Drive the opposite knee up toward your chest.',
+      approvedAsset: _highKneesAsset('F_05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'high_knees_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Land softly and reset your stance.',
+      approvedAsset: _highKneesAsset('F_06'),
+      purpose: PosePurpose.returnPhase,
+    ),
+  ],
+  // Even continuous loop, matching the rest of this session's V2
+  // exercises: 0.4s per frame x 6 frames = 2.4s per cycle — a quick,
+  // driving cadence appropriate for a fast cardio drill.
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 2.4,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real High Knees frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/high_knees/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: High Knees.',
+    benefit: 'Raises your heart rate while working your legs and core.',
+    setupInstruction: 'Stand tall and drive your knees up quickly.',
+    formCues: [
+      'Keep a quick, driving rhythm and land softly.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Approved Butt Kicks sequence — uniform lavender Glow Up Cardio visual
+/// system. Reuses id `EX044` — the id HIIT Cardio Blast's routine entry
+/// already referenced (no new EX number, matching the convention already
+/// used for Glute Bridge/High Knees/etc.).
+String _buttKicksAsset(String file) =>
+    'assets/glow_up/exercises/butt_kicks/female/v2/$file.png';
+
+final _buttKicks = ExerciseDefinition(
+  id: 'EX044',
+  displayName: 'Butt Kicks',
+  category: 'Cardio',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Hamstrings', 'Legs', 'Cardio'],
+  benefitShort: 'Raises your heart rate while working your hamstrings.',
+  durationSeconds: 35,
+  poses: [
+    PoseDefinition(
+      poseId: 'butt_kicks_01',
+      order: 1,
+      label: 'STAND',
+      instruction: 'Stand tall with your core engaged.',
+      approvedAsset: _buttKicksAsset('F_01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'butt_kicks_02',
+      order: 2,
+      label: 'KICK HEEL UP',
+      instruction: 'Kick one heel up toward your glutes.',
+      approvedAsset: _buttKicksAsset('F_02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'butt_kicks_03',
+      order: 3,
+      label: 'HEEL AT PEAK',
+      instruction: 'Bring your heel up quickly, staying light on your feet.',
+      approvedAsset: _buttKicksAsset('F_03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'butt_kicks_04',
+      order: 4,
+      label: 'SWITCH DOWN',
+      instruction: 'Land softly and switch legs.',
+      approvedAsset: _buttKicksAsset('F_04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'butt_kicks_05',
+      order: 5,
+      label: 'OPPOSITE HEEL UP',
+      instruction: 'Kick the opposite heel up toward your glutes.',
+      approvedAsset: _buttKicksAsset('F_05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'butt_kicks_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Land softly and reset your stance.',
+      approvedAsset: _buttKicksAsset('F_06'),
+      purpose: PosePurpose.returnPhase,
+    ),
+  ],
+  // Even continuous loop: 0.4s per frame x 6 frames = 2.4s per cycle — a
+  // quick, driving cadence, matching High Knees' pace.
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 2.4,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real Butt Kicks frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/butt_kicks/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Butt Kicks.',
+    benefit: 'Raises your heart rate while working your hamstrings.',
+    setupInstruction: 'Stand tall and kick your heels up toward your glutes.',
+    formCues: [
+      'Keep a quick, driving rhythm and land softly.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Approved Step Jacks sequence — uniform lavender Glow Up Cardio visual
+/// system. Reuses id `EX045` — the id HIIT Cardio Blast's routine entry
+/// already referenced. A low-impact jumping-jack variant: feet step out
+/// to the side rather than jump, arms still rise overhead.
+String _stepJacksAsset(String file) =>
+    'assets/glow_up/exercises/step_jacks/female/v2/$file.png';
+
+final _stepJacks = ExerciseDefinition(
+  id: 'EX045',
+  displayName: 'Step Jacks',
+  category: 'Cardio',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Legs', 'Shoulders', 'Cardio'],
+  benefitShort:
+      'Raises your heart rate with a low-impact jumping jack variation.',
+  durationSeconds: 35,
+  poses: [
+    PoseDefinition(
+      poseId: 'step_jacks_01',
+      order: 1,
+      label: 'FEET TOGETHER',
+      instruction: 'Stand with your feet together, arms at your sides.',
+      approvedAsset: _stepJacksAsset('F_01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'step_jacks_02',
+      order: 2,
+      label: 'STEP OUT',
+      instruction: 'Step one foot out to the side.',
+      approvedAsset: _stepJacksAsset('F_02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'step_jacks_03',
+      order: 3,
+      label: 'ARMS RISE',
+      instruction: 'Raise your arms out and up as you step.',
+      approvedAsset: _stepJacksAsset('F_03'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'step_jacks_04',
+      order: 4,
+      label: 'ARMS OVERHEAD',
+      instruction: 'Feet wide, arms overhead.',
+      approvedAsset: _stepJacksAsset('F_04'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'step_jacks_05',
+      order: 5,
+      label: 'STEP BACK',
+      instruction: 'Step your foot back in as your arms lower.',
+      approvedAsset: _stepJacksAsset('F_05'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'step_jacks_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Feet together, arms back at your sides.',
+      approvedAsset: _stepJacksAsset('F_06'),
+      purpose: PosePurpose.returnPhase,
+    ),
+  ],
+  // Even continuous loop: 0.5s per frame x 6 frames = 3.0s per cycle — a
+  // controlled, low-impact stepping cadence.
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 3.0,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real Step Jacks frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/step_jacks/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Step Jacks.',
+    benefit: 'Raises your heart rate with a low-impact jumping jack variation.',
+    setupInstruction: 'Step your feet out as your arms rise overhead.',
+    formCues: [
+      'Keep a steady rhythm, stepping rather than jumping.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Approved Skaters sequence — uniform lavender Glow Up Cardio visual
+/// system. Reuses id `EX046` — the id HIIT Cardio Blast's routine entry
+/// already referenced.
+String _skatersAsset(String file) =>
+    'assets/glow_up/exercises/skaters/female/v2/$file.png';
+
+final _skaters = ExerciseDefinition(
+  id: 'EX046',
+  displayName: 'Skaters',
+  category: 'Cardio',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Legs', 'Glutes', 'Cardio', 'Balance'],
+  benefitShort:
+      'Raises your heart rate while building lateral leg strength and balance.',
+  durationSeconds: 40,
+  poses: [
+    PoseDefinition(
+      poseId: 'skaters_01',
+      order: 1,
+      label: 'STAND',
+      instruction: 'Stand tall with your knees soft.',
+      approvedAsset: _skatersAsset('F_01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'skaters_02',
+      order: 2,
+      label: 'PUSH OFF',
+      instruction: 'Push off one foot toward the side.',
+      approvedAsset: _skatersAsset('F_02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'skaters_03',
+      order: 3,
+      label: 'LEAP SIDE',
+      instruction: 'Leap sideways, sweeping your back leg behind you.',
+      approvedAsset: _skatersAsset('F_03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'skaters_04',
+      order: 4,
+      label: 'LAND',
+      instruction: 'Land softly and stay balanced.',
+      approvedAsset: _skatersAsset('F_04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'skaters_05',
+      order: 5,
+      label: 'SWITCH SIDE',
+      instruction: 'Push off and leap to the opposite side.',
+      approvedAsset: _skatersAsset('F_05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'skaters_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Land softly and reset your stance.',
+      approvedAsset: _skatersAsset('F_06'),
+      purpose: PosePurpose.returnPhase,
+    ),
+  ],
+  // Even continuous loop: ~0.467s per frame x 6 frames = 2.8s per cycle —
+  // a quick, controlled bounding cadence.
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 2.8,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real Skaters frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/skaters/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Skaters.',
+    benefit:
+        'Raises your heart rate while building lateral leg strength and balance.',
+    setupInstruction: 'Leap side to side like a speed skater.',
+    formCues: [
+      'Land softly and stay light on your feet.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Approved Shadow Boxing sequence — uniform lavender Glow Up Cardio
+/// visual system. Reuses id `EX047` — the id HIIT Cardio Blast's routine
+/// entry already referenced. `playbackType: 'SEQUENCE_LOOP'` matches the
+/// Tier 2 catalog's existing badge (`exercise_catalog.dart`'s `_seqLoop`),
+/// preserved unchanged; the underlying animation still uses
+/// `LoopMode.continuousLoop`, same as every other Cardio exercise this
+/// pass.
+String _shadowBoxingAsset(String file) =>
+    'assets/glow_up/exercises/shadow_boxing/female/v2/$file.png';
+
+final _shadowBoxing = ExerciseDefinition(
+  id: 'EX047',
+  displayName: 'Shadow Boxing',
+  category: 'Cardio',
+  playbackType: 'SEQUENCE_LOOP',
+  bodyAreas: const ['Shoulders', 'Arms', 'Core', 'Cardio'],
+  benefitShort:
+      'Raises your heart rate while working your shoulders, arms, and core.',
+  durationSeconds: 45,
+  poses: [
+    PoseDefinition(
+      poseId: 'shadow_boxing_01',
+      order: 1,
+      label: 'GUARD UP',
+      instruction: 'Stand tall with your fists up, guarding your face.',
+      approvedAsset: _shadowBoxingAsset('F_01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'shadow_boxing_02',
+      order: 2,
+      label: 'JAB',
+      instruction: 'Throw a quick, controlled jab.',
+      approvedAsset: _shadowBoxingAsset('F_02'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'shadow_boxing_03',
+      order: 3,
+      label: 'CROSS',
+      instruction: 'Follow with a controlled cross.',
+      approvedAsset: _shadowBoxingAsset('F_03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'shadow_boxing_04',
+      order: 4,
+      label: 'GUARD RESET',
+      instruction: 'Return your fists to guard.',
+      approvedAsset: _shadowBoxingAsset('F_04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'shadow_boxing_05',
+      order: 5,
+      label: 'OPPOSITE JAB',
+      instruction: 'Throw a jab with the opposite hand.',
+      approvedAsset: _shadowBoxingAsset('F_05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'shadow_boxing_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Return to guard, staying light on your feet.',
+      approvedAsset: _shadowBoxingAsset('F_06'),
+      purpose: PosePurpose.returnPhase,
+    ),
+  ],
+  // Even continuous loop: 0.4s per frame x 6 frames = 2.4s per cycle — a
+  // quick combo cadence.
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 2.4,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real Shadow Boxing frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/shadow_boxing/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Shadow Boxing.',
+    benefit:
+        'Raises your heart rate while working your shoulders, arms, and core.',
+    setupInstruction: 'Throw controlled punches, staying light on your feet.',
+    formCues: [
+      'Keep your guard up between punches.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Approved Side Steps sequence — uniform lavender Glow Up Cardio visual
+/// system. Reuses id `EX048` — the id HIIT Cardio Blast's routine entry
+/// already referenced.
+String _sideStepsAsset(String file) =>
+    'assets/glow_up/exercises/side_steps/female/v2/$file.png';
+
+final _sideSteps = ExerciseDefinition(
+  id: 'EX048',
+  displayName: 'Side Steps',
+  category: 'Cardio',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Legs', 'Glutes', 'Cardio'],
+  benefitShort: 'Raises your heart rate with a low-impact lateral drill.',
+  durationSeconds: 30,
+  poses: [
+    PoseDefinition(
+      poseId: 'side_steps_01',
+      order: 1,
+      label: 'STAND',
+      instruction: 'Stand tall with your knees slightly bent.',
+      approvedAsset: _sideStepsAsset('F_01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'side_steps_02',
+      order: 2,
+      label: 'STEP SIDE',
+      instruction: 'Step one foot out to the side, staying low.',
+      approvedAsset: _sideStepsAsset('F_02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'side_steps_03',
+      order: 3,
+      label: 'FEET TOGETHER LOW',
+      instruction: 'Bring your feet back together, staying low.',
+      approvedAsset: _sideStepsAsset('F_03'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'side_steps_04',
+      order: 4,
+      label: 'HOLD LOW',
+      instruction: 'Hold a low, athletic stance.',
+      approvedAsset: _sideStepsAsset('F_04'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'side_steps_05',
+      order: 5,
+      label: 'STEP OPPOSITE SIDE',
+      instruction: 'Step the opposite foot out to the side, staying low.',
+      approvedAsset: _sideStepsAsset('F_05'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'side_steps_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Bring your feet back together, staying low.',
+      approvedAsset: _sideStepsAsset('F_06'),
+      purpose: PosePurpose.returnPhase,
+    ),
+  ],
+  // Even continuous loop: 0.5s per frame x 6 frames = 3.0s per cycle — a
+  // controlled, low, lateral cadence.
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 3.0,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804, // real Side Steps frames, 326x804
+  previewAssetPath:
+      'assets/glow_up/exercises/side_steps/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Side Steps.',
+    benefit: 'Raises your heart rate with a low-impact lateral drill.',
+    setupInstruction: 'Step side to side, staying low.',
+    formCues: [
+      'Keep your knees soft and stay light on your feet.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/figure_four_stretch/female/v2/F_0N.png`.
+/// Portrait full-body frames, 326x804 (confirmed before use — file
+/// dimensions read directly off disk). `sequence_preview.png` is the same
+/// wide 6-panel filmstrip composite as every other V2 exercise's, exactly
+/// matching the 6 playback frames in order (confirmed before use).
+///
+/// Recovery Flow's first exercise — Tier 2 already declares this at
+/// `EX049` (`exercise_catalog.dart`) with `hasSwitchSide: true`, but the
+/// delivered asset only covers one side (right ankle crossed over left
+/// knee) across all 6 frames — no mirrored left-side sequence exists on
+/// disk. Rather than inventing a second side or silently dropping the
+/// exercise, this is implemented faithfully as the one real side that was
+/// delivered: `LoopMode.timedCycle` with weighted per-pose holds summing
+/// to the full 40s, single pass, no `switchSideCue`. Flagged for founder
+/// review — if a left-side sequence is delivered later, this can gain the
+/// same switch-side treatment as EX052 below.
+String _figureFourStretchV2Asset(String file) =>
+    'assets/glow_up/exercises/figure_four_stretch/female/v2/F_$file.png';
+
+final _figureFourStretchV2 = ExerciseDefinition(
+  id: 'EX049',
+  displayName: 'Figure Four Stretch',
+  category: 'Recovery',
+  playbackType: 'HOLD',
+  bodyAreas: const ['Hips', 'Glutes'],
+  benefitShort: 'Releases tension through the hip and glute.',
+  durationSeconds: 40,
+  poses: [
+    PoseDefinition(
+      poseId: 'figure_four_stretch_v2_01',
+      order: 1,
+      label: 'SEATED START',
+      instruction: 'Sit tall with both feet on the ground.',
+      approvedAsset: _figureFourStretchV2Asset('01'),
+      purpose: PosePurpose.setup,
+      phaseSeconds: 5,
+    ),
+    PoseDefinition(
+      poseId: 'figure_four_stretch_v2_02',
+      order: 2,
+      label: 'CROSS ANKLE',
+      instruction: 'Cross your right ankle over your left knee.',
+      approvedAsset: _figureFourStretchV2Asset('02'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 5,
+    ),
+    PoseDefinition(
+      poseId: 'figure_four_stretch_v2_03',
+      order: 3,
+      label: 'BEGIN FOLD',
+      instruction: 'Begin folding forward from your hips.',
+      approvedAsset: _figureFourStretchV2Asset('03'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 5,
+    ),
+    PoseDefinition(
+      poseId: 'figure_four_stretch_v2_04',
+      order: 4,
+      label: 'DEEP HOLD',
+      instruction: 'Hold this fold, keeping your back long.',
+      approvedAsset: _figureFourStretchV2Asset('04'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 15,
+    ),
+    PoseDefinition(
+      poseId: 'figure_four_stretch_v2_05',
+      order: 5,
+      label: 'RELEASE',
+      instruction: 'Slowly rise back up to seated.',
+      approvedAsset: _figureFourStretchV2Asset('05'),
+      purpose: PosePurpose.returnPhase,
+      phaseSeconds: 5,
+    ),
+    PoseDefinition(
+      poseId: 'figure_four_stretch_v2_06',
+      order: 6,
+      label: 'NEUTRAL',
+      instruction: 'Uncross your legs and sit tall.',
+      approvedAsset: _figureFourStretchV2Asset('06'),
+      purpose: PosePurpose.finish,
+      phaseSeconds: 5,
+    ),
+  ],
+  loopMode: LoopMode.timedCycle,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804,
+  previewAssetPath:
+      'assets/glow_up/exercises/figure_four_stretch/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Figure Four Stretch.',
+    benefit: 'Releases tension through the hip and glute.',
+    setupInstruction:
+        'Sit tall, cross your right ankle over your left knee, and fold forward.',
+    formCues: [
+      'Keep your back long instead of rounding forward.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/calf_stretch/female/v2/F_0N.png`. Portrait
+/// full-body frames, 326x804 (confirmed before use). `sequence_preview.
+/// png` is the matching 6-panel filmstrip.
+///
+/// Recovery Flow's second exercise — Tier 2 (`EX050`) also declares
+/// `hasSwitchSide: true`, and the same asset-scope gap as EX049 applies:
+/// only one leg-back side is shown across all 6 frames. Implemented the
+/// same way — `LoopMode.timedCycle`, single side, no `switchSideCue` —
+/// flagged for founder review alongside EX049.
+String _calfStretchV2Asset(String file) =>
+    'assets/glow_up/exercises/calf_stretch/female/v2/F_$file.png';
+
+final _calfStretchV2 = ExerciseDefinition(
+  id: 'EX050',
+  displayName: 'Calf Stretch',
+  category: 'Recovery',
+  playbackType: 'HOLD',
+  bodyAreas: const ['Calves', 'Ankles'],
+  benefitShort: 'Loosens tight calves after standing or cardio work.',
+  durationSeconds: 40,
+  poses: [
+    PoseDefinition(
+      poseId: 'calf_stretch_v2_01',
+      order: 1,
+      label: 'STAND',
+      instruction: 'Stand tall with your feet together.',
+      approvedAsset: _calfStretchV2Asset('01'),
+      purpose: PosePurpose.setup,
+      phaseSeconds: 5,
+    ),
+    PoseDefinition(
+      poseId: 'calf_stretch_v2_02',
+      order: 2,
+      label: 'STEP BACK',
+      instruction: 'Step your right leg back.',
+      approvedAsset: _calfStretchV2Asset('02'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 5,
+    ),
+    PoseDefinition(
+      poseId: 'calf_stretch_v2_03',
+      order: 3,
+      label: 'WIDEN STANCE',
+      instruction: 'Widen into a split stance, keeping your back heel down.',
+      approvedAsset: _calfStretchV2Asset('03'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 5,
+    ),
+    PoseDefinition(
+      poseId: 'calf_stretch_v2_04',
+      order: 4,
+      label: 'PRESS HEEL',
+      instruction: 'Press your back heel down with your leg extended.',
+      approvedAsset: _calfStretchV2Asset('04'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 15,
+    ),
+    PoseDefinition(
+      poseId: 'calf_stretch_v2_05',
+      order: 5,
+      label: 'EASE IN',
+      instruction: 'Slowly bring your feet back together.',
+      approvedAsset: _calfStretchV2Asset('05'),
+      purpose: PosePurpose.returnPhase,
+      phaseSeconds: 5,
+    ),
+    PoseDefinition(
+      poseId: 'calf_stretch_v2_06',
+      order: 6,
+      label: 'STAND',
+      instruction: 'Stand tall, feet together.',
+      approvedAsset: _calfStretchV2Asset('06'),
+      purpose: PosePurpose.finish,
+      phaseSeconds: 5,
+    ),
+  ],
+  loopMode: LoopMode.timedCycle,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804,
+  previewAssetPath:
+      'assets/glow_up/exercises/calf_stretch/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Calf Stretch.',
+    benefit: 'Loosens tight calves after standing or cardio work.',
+    setupInstruction:
+        'Step one leg back and press your heel down with your leg extended.',
+    formCues: [
+      'Keep your back knee straight and your heel grounded.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/chest_opener/female/v2/F_0N.png`. Portrait
+/// full-body frames, 326x803 (confirmed before use). `sequence_preview.
+/// png` is the matching 6-panel filmstrip (1958x803).
+///
+/// Recovery Flow's third exercise — Tier 2 (`EX051`) declares
+/// `hasSwitchSide: false, hasRepeat: false`, which the delivered asset
+/// matches cleanly: one continuous clasped-hands-behind-back opening
+/// motion, no side to switch. `LoopMode.timedCycle`, single pass over the
+/// full 25s.
+String _chestOpenerV2Asset(String file) =>
+    'assets/glow_up/exercises/chest_opener/female/v2/F_$file.png';
+
+final _chestOpenerV2 = ExerciseDefinition(
+  id: 'EX051',
+  displayName: 'Chest Opener',
+  category: 'Recovery',
+  playbackType: 'HOLD',
+  bodyAreas: const ['Chest', 'Shoulders'],
+  benefitShort: 'Opens the chest and front shoulders after rounded posture.',
+  durationSeconds: 25,
+  poses: [
+    PoseDefinition(
+      poseId: 'chest_opener_v2_01',
+      order: 1,
+      label: 'STAND',
+      instruction: 'Stand tall with your hands at your sides.',
+      approvedAsset: _chestOpenerV2Asset('01'),
+      purpose: PosePurpose.setup,
+      phaseSeconds: 3,
+    ),
+    PoseDefinition(
+      poseId: 'chest_opener_v2_02',
+      order: 2,
+      label: 'CLASP HANDS',
+      instruction: 'Clasp your hands behind your back.',
+      approvedAsset: _chestOpenerV2Asset('02'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 4,
+    ),
+    PoseDefinition(
+      poseId: 'chest_opener_v2_03',
+      order: 3,
+      label: 'BEGIN LIFT',
+      instruction: 'Begin lifting your chest.',
+      approvedAsset: _chestOpenerV2Asset('03'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 4,
+    ),
+    PoseDefinition(
+      poseId: 'chest_opener_v2_04',
+      order: 4,
+      label: 'OPEN HOLD',
+      instruction:
+          'Lift your chest and hold, squeezing your shoulder blades together.',
+      approvedAsset: _chestOpenerV2Asset('04'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 10,
+    ),
+    PoseDefinition(
+      poseId: 'chest_opener_v2_05',
+      order: 5,
+      label: 'DEEPEN',
+      instruction: 'Keep breathing steadily as you hold.',
+      approvedAsset: _chestOpenerV2Asset('05'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 3,
+    ),
+    PoseDefinition(
+      poseId: 'chest_opener_v2_06',
+      order: 6,
+      label: 'RELEASE',
+      instruction: 'Release your hands and relax your shoulders.',
+      approvedAsset: _chestOpenerV2Asset('06'),
+      purpose: PosePurpose.finish,
+      phaseSeconds: 1,
+    ),
+  ],
+  loopMode: LoopMode.timedCycle,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 803,
+  previewAssetPath:
+      'assets/glow_up/exercises/chest_opener/female/v2/sequence_preview.png',
+  previewAspectRatio: 1958 / 803,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Chest Opener.',
+    benefit: 'Opens the chest and front shoulders after rounded posture.',
+    setupInstruction: 'Clasp your hands behind your back and lift your chest.',
+    formCues: [
+      'Keep your shoulders relaxed away from your ears.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/90_90_hip_switch/female/v2/F_0N.png`.
+/// Portrait full-body frames, 326x804 (confirmed before use).
+/// `sequence_preview.png` is the matching 6-panel filmstrip.
+///
+/// Recovery Flow's fourth exercise — Tier 2 (`EX052`) declares
+/// `hasSwitchSide: true`, and unlike EX049/EX050 above, the delivered
+/// asset genuinely shows both sides: F_01-F_02 seated with the knees bent
+/// to one side, F_03-F_04 rotating through a back-facing transition,
+/// F_05-F_06 seated with the knees bent to the other side. Implemented
+/// with the same "single pass, switchSideCue at the transition" shape
+/// already established for EX062 Knee-to-Chest/EX063 Supine Twist/EX064
+/// Ankle Circles — `LoopMode.timedCycle`, never loops, halfway point
+/// marks the actual side switch shown in F_03/F_04.
+String _hipSwitch9090V2Asset(String file) =>
+    'assets/glow_up/exercises/90_90_hip_switch/female/v2/F_$file.png';
+
+final _hipSwitch9090V2 = ExerciseDefinition(
+  id: 'EX052',
+  displayName: '90/90 Hip Switch',
+  category: 'Recovery',
+  playbackType: 'SIDE_SEQUENCE',
+  bodyAreas: const ['Hips'],
+  benefitShort: 'Mobilizes the hips through internal and external rotation.',
+  durationSeconds: 40,
+  poses: [
+    PoseDefinition(
+      poseId: 'hip_switch_9090_v2_01',
+      order: 1,
+      label: 'RIGHT START',
+      instruction: 'Sit with both knees bent to your right side.',
+      approvedAsset: _hipSwitch9090V2Asset('01'),
+      purpose: PosePurpose.setup,
+      phaseSeconds: 6,
+    ),
+    PoseDefinition(
+      poseId: 'hip_switch_9090_v2_02',
+      order: 2,
+      label: 'RIGHT HOLD',
+      instruction: 'Settle into this side, keeping your chest tall.',
+      approvedAsset: _hipSwitch9090V2Asset('02'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 8,
+    ),
+    PoseDefinition(
+      poseId: 'hip_switch_9090_v2_03',
+      order: 3,
+      label: 'ROTATE THROUGH',
+      instruction: 'Rotate through center, sweeping both knees around.',
+      approvedAsset: _hipSwitch9090V2Asset('03'),
+      purpose: PosePurpose.switchSide,
+      phaseSeconds: 6,
+    ),
+    PoseDefinition(
+      poseId: 'hip_switch_9090_v2_04',
+      order: 4,
+      label: 'CONTINUE ROTATE',
+      instruction: 'Continue rotating to the other side.',
+      approvedAsset: _hipSwitch9090V2Asset('04'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 6,
+    ),
+    PoseDefinition(
+      poseId: 'hip_switch_9090_v2_05',
+      order: 5,
+      label: 'LEFT START',
+      instruction: 'Sit with both knees bent to your left side.',
+      approvedAsset: _hipSwitch9090V2Asset('05'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 6,
+    ),
+    PoseDefinition(
+      poseId: 'hip_switch_9090_v2_06',
+      order: 6,
+      label: 'LEFT HOLD',
+      instruction: 'Settle into this side, keeping your chest tall.',
+      approvedAsset: _hipSwitch9090V2Asset('06'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 8,
+    ),
+  ],
+  loopMode: LoopMode.timedCycle,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804,
+  previewAssetPath:
+      'assets/glow_up/exercises/90_90_hip_switch/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: 90/90 Hip Switch.',
+    benefit: 'Mobilizes the hips through internal and external rotation.',
+    setupInstruction: 'Sit with both knees bent to one side, chest tall.',
+    switchSideCue: 'Rotate through center to the other side.',
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/dryland_freestyle_reach/female/v2/F_0N.png`.
+/// Portrait full-body frames, 326x804 (confirmed before use).
+/// `sequence_preview.png` is the matching 6-panel filmstrip.
+///
+/// Pre-Swim exercise, newly assigned `EX077` — the next free id after
+/// EX076 (High Knees/Butt Kicks/Step Jacks/Skaters/Shadow Boxing/Side
+/// Steps batch), explicitly outside the EX080-EX090 range reserved
+/// pending separate founder approval. No prior Tier 2 catalog entry
+/// exists for this exercise (brand new, founder-delivered asset with no
+/// existing metadata to match against). Duration (40s) and pacing are a
+/// disclosed default, matching this session's typical mobility-prep pace
+/// — not sourced from any provided spec.
+///
+/// Playback: `LoopMode.continuousLoop` — a hinged-forward reach/sweep
+/// motion that reads as one smooth repeating cycle (F_06 returns to a
+/// neutral standing position close to F_01). [loopCycleSeconds] 4.8s per
+/// lap (0.8s/frame) x ~8.3 laps across the 40s duration.
+String _drylandFreestyleReachV2Asset(String file) =>
+    'assets/glow_up/exercises/dryland_freestyle_reach/female/v2/F_$file.png';
+
+final _drylandFreestyleReachV2 = ExerciseDefinition(
+  id: 'EX077',
+  displayName: 'Dryland Freestyle Reach',
+  category: 'Mobility',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Shoulders', 'Upper Back'],
+  benefitShort:
+      'Rehearses the freestyle reach to prep your shoulders before swimming.',
+  durationSeconds: 40,
+  poses: [
+    PoseDefinition(
+      poseId: 'dryland_freestyle_reach_v2_01',
+      order: 1,
+      label: 'HINGE',
+      instruction: 'Hinge forward slightly at the hips.',
+      approvedAsset: _drylandFreestyleReachV2Asset('01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'dryland_freestyle_reach_v2_02',
+      order: 2,
+      label: 'REACH',
+      instruction: 'Reach one arm forward, as if beginning a freestyle stroke.',
+      approvedAsset: _drylandFreestyleReachV2Asset('02'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'dryland_freestyle_reach_v2_03',
+      order: 3,
+      label: 'EXTEND',
+      instruction: 'Extend fully through your fingertips.',
+      approvedAsset: _drylandFreestyleReachV2Asset('03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'dryland_freestyle_reach_v2_04',
+      order: 4,
+      label: 'SWEEP',
+      instruction: 'Sweep both arms wide, opening through the shoulders.',
+      approvedAsset: _drylandFreestyleReachV2Asset('04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'dryland_freestyle_reach_v2_05',
+      order: 5,
+      label: 'CONTINUE SWEEP',
+      instruction: 'Continue the sweeping motion with control.',
+      approvedAsset: _drylandFreestyleReachV2Asset('05'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'dryland_freestyle_reach_v2_06',
+      order: 6,
+      label: 'RESET',
+      instruction: 'Return to standing and reset.',
+      approvedAsset: _drylandFreestyleReachV2Asset('06'),
+      purpose: PosePurpose.returnPhase,
+    ),
+  ],
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 4.8,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804,
+  previewAssetPath:
+      'assets/glow_up/exercises/dryland_freestyle_reach/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Dryland Freestyle Reach.',
+    benefit:
+        'Rehearses the freestyle reach to prep your shoulders before swimming.',
+    setupInstruction:
+        'Hinge forward and reach one arm at a time, like a freestyle stroke.',
+    formCues: [
+      'Keep the motion slow and controlled, not rushed.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/streamline_side_bend/female/v2/F_0N.png`.
+/// Portrait full-body frames, 326x804 (confirmed before use).
+/// `sequence_preview.png` is the matching 6-panel filmstrip.
+///
+/// Pre-Swim exercise, newly assigned `EX078` (next free id after EX077).
+/// No prior Tier 2 entry. Duration (40s) is a disclosed default, same
+/// rationale as EX077.
+///
+/// Playback: `LoopMode.continuousLoop` — overhead streamline reach with a
+/// side bend, reading as one smooth cycle (F_01 and F_06 are both the
+/// same relaxed standing position). [loopCycleSeconds] 4.8s per lap
+/// (0.8s/frame) x ~8.3 laps across the 40s duration.
+String _streamlineSideBendV2Asset(String file) =>
+    'assets/glow_up/exercises/streamline_side_bend/female/v2/F_$file.png';
+
+final _streamlineSideBendV2 = ExerciseDefinition(
+  id: 'EX078',
+  displayName: 'Streamline Side Bend',
+  category: 'Mobility',
+  playbackType: 'TIMER',
+  bodyAreas: const ['Shoulders', 'Hips', 'Obliques'],
+  benefitShort:
+      'Rehearses the streamline position and opens the sides of your body.',
+  durationSeconds: 40,
+  poses: [
+    PoseDefinition(
+      poseId: 'streamline_side_bend_v2_01',
+      order: 1,
+      label: 'STAND',
+      instruction: 'Stand tall with your feet hip-width apart.',
+      approvedAsset: _streamlineSideBendV2Asset('01'),
+      purpose: PosePurpose.setup,
+    ),
+    PoseDefinition(
+      poseId: 'streamline_side_bend_v2_02',
+      order: 2,
+      label: 'RAISE OVERHEAD',
+      instruction: 'Raise both arms overhead into a streamline position.',
+      approvedAsset: _streamlineSideBendV2Asset('02'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'streamline_side_bend_v2_03',
+      order: 3,
+      label: 'SIDE BEND',
+      instruction: 'Bend gently to one side, keeping your arms overhead.',
+      approvedAsset: _streamlineSideBendV2Asset('03'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'streamline_side_bend_v2_04',
+      order: 4,
+      label: 'RETURN OVERHEAD',
+      instruction: 'Return to center, arms extended overhead.',
+      approvedAsset: _streamlineSideBendV2Asset('04'),
+      purpose: PosePurpose.transition,
+    ),
+    PoseDefinition(
+      poseId: 'streamline_side_bend_v2_05',
+      order: 5,
+      label: 'SIDE BEND',
+      instruction: 'Bend gently to the side again.',
+      approvedAsset: _streamlineSideBendV2Asset('05'),
+      purpose: PosePurpose.active,
+    ),
+    PoseDefinition(
+      poseId: 'streamline_side_bend_v2_06',
+      order: 6,
+      label: 'RELEASE',
+      instruction: 'Lower your arms and relax.',
+      approvedAsset: _streamlineSideBendV2Asset('06'),
+      purpose: PosePurpose.returnPhase,
+    ),
+  ],
+  loopMode: LoopMode.continuousLoop,
+  loopCycleSeconds: 4.8,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804,
+  previewAssetPath:
+      'assets/glow_up/exercises/streamline_side_bend/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Streamline Side Bend.',
+    benefit:
+        'Rehearses the streamline position and opens the sides of your body.',
+    setupInstruction: 'Reach both arms overhead and bend gently side to side.',
+    formCues: [
+      'Keep the bend gentle — this is a warm-up, not a deep stretch.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
+  ),
+);
+
+/// Real, individually-verified production frames at
+/// `assets/glow_up/exercises/triceps_lat_stretch/female/v2/F_0N.png`.
+/// Portrait full-body frames, 326x804 (confirmed before use).
+/// `sequence_preview.png` is the matching 6-panel filmstrip.
+///
+/// Pre-Swim exercise, newly assigned `EX079` (next free id after EX078).
+/// No prior Tier 2 entry. Duration (30s) is a disclosed default — a hold
+/// stretch, given a shorter duration than the two dynamic Pre-Swim preps
+/// above but longer than Recovery's Chest Opener (25s) since it holds one
+/// side rather than a symmetric motion.
+///
+/// Playback: `LoopMode.timedCycle` — a static overhead elbow-grab hold on
+/// one side (only one side is delivered — the same single-side scope as
+/// EX049/EX050 above, not a defect, just what the frames show), single
+/// pass over the full 30s.
+String _tricepsLatStretchV2Asset(String file) =>
+    'assets/glow_up/exercises/triceps_lat_stretch/female/v2/F_$file.png';
+
+final _tricepsLatStretchV2 = ExerciseDefinition(
+  id: 'EX079',
+  displayName: 'Triceps & Lat Stretch',
+  category: 'Mobility',
+  playbackType: 'HOLD',
+  bodyAreas: const ['Triceps', 'Lats', 'Shoulders'],
+  benefitShort: 'Opens the triceps and lats before overhead swim strokes.',
+  durationSeconds: 30,
+  poses: [
+    PoseDefinition(
+      poseId: 'triceps_lat_stretch_v2_01',
+      order: 1,
+      label: 'STAND',
+      instruction: 'Stand tall with your arms relaxed.',
+      approvedAsset: _tricepsLatStretchV2Asset('01'),
+      purpose: PosePurpose.setup,
+      phaseSeconds: 4,
+    ),
+    PoseDefinition(
+      poseId: 'triceps_lat_stretch_v2_02',
+      order: 2,
+      label: 'RAISE ELBOW',
+      instruction: 'Raise one elbow overhead, hand reaching down your back.',
+      approvedAsset: _tricepsLatStretchV2Asset('02'),
+      purpose: PosePurpose.transition,
+      phaseSeconds: 4,
+    ),
+    PoseDefinition(
+      poseId: 'triceps_lat_stretch_v2_03',
+      order: 3,
+      label: 'GENTLE PULL',
+      instruction: 'Use your other hand to gently guide the elbow further.',
+      approvedAsset: _tricepsLatStretchV2Asset('03'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 9,
+    ),
+    PoseDefinition(
+      poseId: 'triceps_lat_stretch_v2_04',
+      order: 4,
+      label: 'EASE OUT',
+      instruction: 'Slowly lower your arm.',
+      approvedAsset: _tricepsLatStretchV2Asset('04'),
+      purpose: PosePurpose.returnPhase,
+      phaseSeconds: 3,
+    ),
+    PoseDefinition(
+      poseId: 'triceps_lat_stretch_v2_05',
+      order: 5,
+      label: 'HOLD AGAIN',
+      instruction: 'Raise the same elbow overhead once more.',
+      approvedAsset: _tricepsLatStretchV2Asset('05'),
+      purpose: PosePurpose.active,
+      phaseSeconds: 8,
+    ),
+    PoseDefinition(
+      poseId: 'triceps_lat_stretch_v2_06',
+      order: 6,
+      label: 'RELEASE',
+      instruction: 'Lower your arm and relax.',
+      approvedAsset: _tricepsLatStretchV2Asset('06'),
+      purpose: PosePurpose.finish,
+      phaseSeconds: 2,
+    ),
+  ],
+  loopMode: LoopMode.timedCycle,
+  visualOrientation: ExerciseVisualOrientation.portrait,
+  visualAspectRatio: 326 / 804,
+  previewAssetPath:
+      'assets/glow_up/exercises/triceps_lat_stretch/female/v2/sequence_preview.png',
+  previewAspectRatio: 1956 / 804,
+  voiceScript: const VoiceScript(
+    intro: 'Next: Triceps and Lat Stretch.',
+    benefit: 'Opens the triceps and lats before overhead swim strokes.',
+    setupInstruction:
+        'Raise one elbow overhead and gently guide it with your other hand.',
+    formCues: [
+      'Keep the pull gentle — never force the stretch.',
+    ], // the "Halfway there." prefix is added by VoiceCoach itself
+    finishCue: 'Done.',
   ),
 );
 
@@ -4731,6 +6943,28 @@ final List<ExerciseDefinition> _kRoutinePlayerAll = [
   _sitUpReachV2,
   _legsUpWallV2,
   _reclinedButterflyV2,
+  _neckReleaseV2,
+  _boxBreathingV2,
+  _shoulderRollsV2,
+  _armCirclesV2,
+  _wristCirclesV2,
+  _hipCirclesV2,
+  _thoracicRotationV2,
+  _kneeCirclesV2,
+  _marchInPlaceV2,
+  _highKnees,
+  _buttKicks,
+  _stepJacks,
+  _skaters,
+  _shadowBoxing,
+  _sideSteps,
+  _figureFourStretchV2,
+  _calfStretchV2,
+  _chestOpenerV2,
+  _hipSwitch9090V2,
+  _drylandFreestyleReachV2,
+  _streamlineSideBendV2,
+  _tricepsLatStretchV2,
 ];
 
 /// Canonical id -> [ExerciseDefinition] lookup, covering every exercise

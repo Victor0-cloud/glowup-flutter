@@ -1,0 +1,55 @@
+{
+  "routine_local_id": "PSW05",
+  "title": "Standing Calf Stretch",
+  "women_only": true,
+  "side_mode": "BOTH_SIDES",
+  "frame_count": 6,
+  "preferred_asset_folder": "app_frames_400x600",
+  "opposite_side_asset_folder": "opposite_side_app_frames_400x600",
+  "completion_rule": "complete_every_required_side_before_advance",
+  "source_strip": "source_sequence.png",
+  "frames": [
+    {
+      "index": 1,
+      "role": "START",
+      "filename": "PSW05_F_01_START.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 2,
+      "role": "LEFT_SETUP",
+      "filename": "PSW05_F_02_LEFT_SETUP.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 3,
+      "role": "LEFT_HOLD",
+      "filename": "PSW05_F_03_LEFT_HOLD.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 4,
+      "role": "CENTER",
+      "filename": "PSW05_F_04_CENTER.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 5,
+      "role": "RIGHT_HOLD",
+      "filename": "PSW05_F_05_RIGHT_HOLD.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 6,
+      "role": "RETURN",
+      "filename": "PSW05_F_06_RETURN.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    }
+  ]
+}

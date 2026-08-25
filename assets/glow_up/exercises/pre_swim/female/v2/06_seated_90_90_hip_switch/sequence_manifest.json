@@ -1,0 +1,55 @@
+{
+  "routine_local_id": "PSW06",
+  "title": "Seated 90/90 Hip Switch",
+  "women_only": true,
+  "side_mode": "ALTERNATING",
+  "frame_count": 6,
+  "preferred_asset_folder": "app_frames_400x600",
+  "opposite_side_asset_folder": null,
+  "completion_rule": "complete_full_sequence",
+  "source_strip": "source_sequence.png",
+  "frames": [
+    {
+      "index": 1,
+      "role": "START_LEFT",
+      "filename": "PSW06_F_01_START_LEFT.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 2,
+      "role": "SWITCH_CENTER",
+      "filename": "PSW06_F_02_SWITCH_CENTER.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 3,
+      "role": "RIGHT_POSITION",
+      "filename": "PSW06_F_03_RIGHT_POSITION.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 4,
+      "role": "SWITCH_CENTER",
+      "filename": "PSW06_F_04_SWITCH_CENTER.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 5,
+      "role": "LEFT_POSITION",
+      "filename": "PSW06_F_05_LEFT_POSITION.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 6,
+      "role": "RETURN",
+      "filename": "PSW06_F_06_RETURN.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    }
+  ]
+}

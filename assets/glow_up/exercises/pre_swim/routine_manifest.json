@@ -1,0 +1,21 @@
+{
+  "routine_id": "pre_swim_v1",
+  "title": "Pre-Swim",
+  "audience": "women_only",
+  "duration_minutes": 9,
+  "equipment": [],
+  "difficulty": "beginner",
+  "exercises": [
+    {"order": 1, "key": "standing_chest_opener", "seconds": 45, "side_mode": "CENTERED", "asset": "Six-frame standing chest opener sequence.png"},
+    {"order": 2, "key": "triceps_lat_stretch", "seconds": 60, "side_mode": "BOTH_SIDES", "asset": "Six-frame alternating triceps and lat stretch.png"},
+    {"order": 3, "key": "streamline_side_bend", "seconds": 60, "side_mode": "BOTH_SIDES", "asset": "Streamline Side Bend Warm-Up Sequence.png"},
+    {"order": 4, "key": "dryland_freestyle_reach", "seconds": 60, "side_mode": "ALTERNATING", "asset": "Six-frame dryland freestyle reach sequence.png"},
+    {"order": 5, "key": "standing_calf_stretch", "seconds": 45, "side_mode": "BOTH_SIDES", "asset": "Six-frame standing calf stretch sequence.png"},
+    {"order": 6, "key": "seated_90_90_hip_switch", "seconds": 60, "side_mode": "ALTERNATING", "asset": "Seated 90_90 Hip Switch Loop.png"},
+    {"order": 7, "key": "seated_figure_four_stretch", "seconds": 60, "side_mode": "BOTH_SIDES", "asset": "Six-frame seated figure four stretch.png"}
+  ],
+  "completion_gate": "all_required_sides_completed",
+  "feedback": ["easy", "okay", "tight", "pain"],
+  "ecosystem_events": ["routine_started", "exercise_side_completed", "exercise_feedback_recorded", "routine_completed", "routine_abandoned"]
+}
+

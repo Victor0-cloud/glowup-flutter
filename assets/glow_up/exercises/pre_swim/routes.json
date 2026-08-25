@@ -1,0 +1,10 @@
+{
+  "module": "pre_swim",
+  "placement": "assets/glow_up/design_reference/22_routines/pre_swim",
+  "routes": [
+    {"screen": "PS01", "route": "/routines/pre-swim", "asset": "actual_pages_png/PS01_pre_swim_routine.png"},
+    {"screen": "PS02", "route": "/routines/pre-swim/details", "asset": "actual_pages_png/PS02_pre_swim_details.png"},
+    {"screen": "PS03", "route": "/routines/pre-swim/player", "asset": "actual_pages_png/PS03_pre_swim_player.png"}
+  ]
+}
+

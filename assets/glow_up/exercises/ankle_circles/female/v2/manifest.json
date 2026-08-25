@@ -1,0 +1,39 @@
+{
+  "exerciseId": "EX064",
+  "name": "Ankle Circles",
+  "slug": "ankle_circles",
+  "category": "Bedtime",
+  "difficulty": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "durationSeconds": 30,
+  "playbackType": "side_sequence",
+  "loop": false,
+  "equipment": [],
+  "position": "seated",
+  "imageSize": { "width": 277, "height": 265 },
+  "thumbnailFrame": "EX064_F_02_RIGHT_ANKLE_FLEX.png",
+  "frames": [
+    { "order": 1, "file": "EX064_F_01_START.png", "label": "Start", "seconds": 2, "cue": "Sit tall with both legs extended and ankles relaxed." },
+    { "order": 2, "file": "EX064_F_02_RIGHT_ANKLE_FLEX.png", "label": "Right Ankle Flex", "seconds": 6, "cue": "Circle your right ankle slowly through a comfortable range." },
+    { "order": 3, "file": "EX064_F_03_RIGHT_ANKLE_POINT.png", "label": "Right Ankle Point", "seconds": 6, "cue": "Continue the right ankle circles without moving your knee." },
+    { "order": 4, "file": "EX064_F_04_CENTER_RESET.png", "label": "Center Reset", "seconds": 2, "cue": "Return both ankles to neutral." },
+    { "order": 5, "file": "EX064_F_05_LEFT_ANKLE_FLEX.png", "label": "Left Ankle Flex", "seconds": 7, "cue": "Circle your left ankle slowly through a comfortable range." },
+    { "order": 6, "file": "EX064_F_06_LEFT_ANKLE_POINT.png", "label": "Left Ankle Point", "seconds": 7, "cue": "Finish the left ankle circles while keeping the knee still." }
+  ],
+  "safety": [
+    "Keep the movement slow and controlled.",
+    "Move only at the ankle; keep the knees relaxed and still.",
+    "Reduce the circle size or stop if there is sharp ankle pain."
+  ],
+  "voiceAutomation": {
+    "mode": "movement_cues_only",
+    "continuousBreathingPrompts": false,
+    "bedtimeTone": "soft"
+  },
+  "aiCoachNote": {
+    "enabled": true,
+    "prompt": "How did Ankle Circles feel? Note stiffness, clicking or discomfort in either ankle.",
+    "trainingSignals": ["right_ankle_mobility", "left_ankle_mobility", "right_ankle_discomfort", "left_ankle_discomfort", "circle_size_modification"]
+  }
+}

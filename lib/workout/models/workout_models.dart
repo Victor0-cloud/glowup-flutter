@@ -34,6 +34,7 @@ class WorkoutExercise {
     this.reps,
     this.steps = const [],
     this.hasSwitchSide = false,
+    this.thumbnailAssetPath,
   });
 
   /// Builds a session-ready [WorkoutExercise] from a real catalog
@@ -42,7 +43,11 @@ class WorkoutExercise {
   /// exercise carries its actual category-sourced playback type, rep/hold
   /// target, real step captions, switch-side behavior, and (for the 6
   /// verified exercises) real per-step Figma pose images.
-  factory WorkoutExercise.fromCatalog(Exercise exercise, {String? instanceId}) {
+  factory WorkoutExercise.fromCatalog(
+    Exercise exercise, {
+    String? instanceId,
+    String? thumbnailAssetPath,
+  }) {
     return WorkoutExercise(
       id: instanceId ?? exercise.id,
       catalogId: exercise.id,
@@ -50,9 +55,12 @@ class WorkoutExercise {
       title: exercise.name,
       durationSeconds: exercise.durationSeconds,
       playbackType: exercise.playbackType,
-      reps: exercise.playbackType == ExercisePlaybackType.reps ? exercise.reps : null,
+      reps: exercise.playbackType == ExercisePlaybackType.reps
+          ? exercise.reps
+          : null,
       steps: exercise.steps,
       hasSwitchSide: exercise.hasSwitchSide,
+      thumbnailAssetPath: thumbnailAssetPath,
     );
   }
 
@@ -67,11 +75,23 @@ class WorkoutExercise {
   final List<ExerciseStep> steps;
   final bool hasSwitchSide;
 
+  /// A dedicated routine-detail-thumbnail image, distinct from the
+  /// per-step pose sequence (e.g. a wide filmstrip "sequence preview"
+  /// composite, not any single approved pose frame) — takes priority over
+  /// [resolvePoseAssetPath]'s per-step lookup in [_ExerciseThumbnail]
+  /// only; the ACTIVE-phase [PoseDisplayBox] never reads this, so the
+  /// live exercise still animates through its real per-step frames. Null
+  /// for every exercise whose thumbnail is just its own first/held pose
+  /// frame (the default, existing behavior).
+  final String? thumbnailAssetPath;
+
   String get formattedDuration {
     if (durationSeconds < 60) return '$durationSeconds sec';
     final minutes = durationSeconds ~/ 60;
     final seconds = durationSeconds % 60;
-    return seconds == 0 ? '$minutes min' : '$minutes:${seconds.toString().padLeft(2, '0')} min';
+    return seconds == 0
+        ? '$minutes min'
+        : '$minutes:${seconds.toString().padLeft(2, '0')} min';
   }
 }
 
@@ -79,10 +99,10 @@ enum WorkoutDifficulty { beginner, intermediate, advanced }
 
 extension WorkoutDifficultyLabel on WorkoutDifficulty {
   String get label => switch (this) {
-        WorkoutDifficulty.beginner => 'Beginner',
-        WorkoutDifficulty.intermediate => 'Intermediate',
-        WorkoutDifficulty.advanced => 'Advanced',
-      };
+    WorkoutDifficulty.beginner => 'Beginner',
+    WorkoutDifficulty.intermediate => 'Intermediate',
+    WorkoutDifficulty.advanced => 'Advanced',
+  };
 }
 
 /// A single workout template (368:3059 "32_workout_detail"). Only
@@ -103,6 +123,8 @@ class Workout {
     required this.calories,
     required this.equipment,
     required this.exercises,
+    this.restSecondsOverride,
+    this.useCatalogDurations = false,
   });
 
   final String id;
@@ -115,7 +137,36 @@ class Workout {
   final String equipment;
   final List<WorkoutExercise> exercises;
 
-  int get totalSeconds => exercises.fold(0, (sum, e) => sum + e.durationSeconds);
+  /// Seconds of REST/transition [RoutinePlayerController] inserts between
+  /// exercises for this routine specifically — null (the default, every
+  /// existing routine) keeps the shared 30-second default exactly as
+  /// before. Set only by routines with their own approved transition
+  /// timing (e.g. Pre-Swim's 5-second transition) — never a blanket
+  /// change to every other routine's rest period.
+  final int? restSecondsOverride;
+
+  /// When true, [WorkoutExercise.durationSeconds] on each entry below
+  /// (this routine's own catalog-declared duration) overrides the shared
+  /// registry [ExerciseDefinition]'s duration for the RoutinePlayer
+  /// session — see `_routinePlayerRoutineFor` in app_router.dart. False
+  /// (the default, every existing routine) keeps using each exercise's
+  /// one shared registry duration exactly as before, so a routine that
+  /// reuses another routine's exercise (e.g. Pre-Swim reusing Recovery's
+  /// EX049 Figure Four Stretch) can play it at its own approved duration
+  /// without changing Recovery's.
+  final bool useCatalogDurations;
+
+  /// Raw exercise time, plus (only when [restSecondsOverride] is set)
+  /// this routine's own transition time between exercises — for every
+  /// other routine this is identical to the old exercises-only sum, since
+  /// [restSecondsOverride] is null and adds nothing.
+  int get totalSeconds {
+    final exerciseSum = exercises.fold(0, (sum, e) => sum + e.durationSeconds);
+    final override = restSecondsOverride;
+    if (override == null || exercises.length < 2) return exerciseSum;
+    return exerciseSum + override * (exercises.length - 1);
+  }
+
   int get totalMinutes => (totalSeconds / 60).round();
 }
 
@@ -134,7 +185,12 @@ const int kGetReadySeconds = 3;
 /// measures them; only what was actually tracked (name, real elapsed
 /// time) is real.
 class ExerciseResult {
-  const ExerciseResult({required this.exercise, required this.elapsedSeconds, required this.skipped, this.note});
+  const ExerciseResult({
+    required this.exercise,
+    required this.elapsedSeconds,
+    required this.skipped,
+    this.note,
+  });
 
   final WorkoutExercise exercise;
   final int elapsedSeconds;
@@ -192,7 +248,9 @@ class WorkoutSessionState {
 
   WorkoutExercise get currentExercise => workout.exercises[exerciseIndex];
   WorkoutExercise? get nextExercise =>
-      exerciseIndex + 1 < workout.exercises.length ? workout.exercises[exerciseIndex + 1] : null;
+      exerciseIndex + 1 < workout.exercises.length
+      ? workout.exercises[exerciseIndex + 1]
+      : null;
   bool get isLastExercise => exerciseIndex == workout.exercises.length - 1;
   double get workoutProgress => (exerciseIndex + 1) / workout.exercises.length;
 
@@ -211,7 +269,8 @@ class WorkoutSessionState {
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
       isPaused: isPaused ?? this.isPaused,
       startedAt: startedAt,
-      exerciseElapsedSeconds: exerciseElapsedSeconds ?? this.exerciseElapsedSeconds,
+      exerciseElapsedSeconds:
+          exerciseElapsedSeconds ?? this.exerciseElapsedSeconds,
       skippedExerciseIds: skippedExerciseIds ?? this.skippedExerciseIds,
     );
   }

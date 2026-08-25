@@ -1,0 +1,51 @@
+{
+  "exerciseId": "EX069",
+  "name": "Box Breathing",
+  "slug": "box_breathing",
+  "category": "Bedtime",
+  "routine": "Deep Sleep Prep",
+  "routineOrder": 4,
+  "difficulty": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "durationSeconds": 60,
+  "playbackType": "breathing",
+  "loop": true,
+  "equipment": [],
+  "position": "seated_cross_legged",
+  "imageSize": { "width": 277, "height": 265 },
+  "thumbnailFrame": "EX069_F_01_SETTLE.png",
+  "breathPattern": {
+    "inhaleSeconds": 4,
+    "holdFullSeconds": 4,
+    "exhaleSeconds": 4,
+    "holdEmptySeconds": 4,
+    "cycleSeconds": 16,
+    "stopAtDurationSeconds": 60
+  },
+  "frames": [
+    { "order": 1, "file": "EX069_F_01_SETTLE.png", "label": "Settle", "phase": "prepare", "cue": "Sit comfortably and let your shoulders soften." },
+    { "order": 2, "file": "EX069_F_02_INHALE_BEGIN.png", "label": "Inhale Begin", "phase": "inhale", "cue": "Inhale gently through your nose for four counts." },
+    { "order": 3, "file": "EX069_F_03_INHALE_FULL.png", "label": "Inhale Full", "phase": "inhale_end", "cue": "Finish the inhale without lifting your shoulders." },
+    { "order": 4, "file": "EX069_F_04_HOLD_FULL.png", "label": "Hold Full", "phase": "hold_full", "cue": "Hold softly for four counts; do not strain." },
+    { "order": 5, "file": "EX069_F_05_EXHALE.png", "label": "Exhale", "phase": "exhale", "cue": "Exhale slowly and comfortably for four counts." },
+    { "order": 6, "file": "EX069_F_06_HOLD_EMPTY_RESET.png", "label": "Hold Empty Reset", "phase": "hold_empty", "cue": "Pause gently for four counts, then begin the next cycle." }
+  ],
+  "safety": [
+    "Keep every phase comfortable; shorten or remove holds if needed.",
+    "Never force the breath or continue through air hunger.",
+    "Return to normal breathing and stop for dizziness, chest pain, panic or shortness of breath."
+  ],
+  "voiceAutomation": {
+    "mode": "phase_synced_box_breathing",
+    "continuousGenericBreathingPrompts": false,
+    "speakOnPhaseChangeOnly": true,
+    "countingEnabled": true,
+    "bedtimeTone": "soft"
+  },
+  "aiCoachNote": {
+    "enabled": true,
+    "prompt": "How did Box Breathing feel? Note whether the four-count holds were comfortable and whether you felt calm, dizzy, anxious or short of breath.",
+    "trainingSignals": ["hold_comfort", "breath_comfort", "calmness", "dizziness", "anxiety", "shortness_of_breath", "preferred_count"]
+  }
+}

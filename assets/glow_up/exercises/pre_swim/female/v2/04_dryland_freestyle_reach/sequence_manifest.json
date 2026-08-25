@@ -1,0 +1,55 @@
+{
+  "routine_local_id": "PSW04",
+  "title": "Dryland Freestyle Reach",
+  "women_only": true,
+  "side_mode": "ALTERNATING",
+  "frame_count": 6,
+  "preferred_asset_folder": "app_frames_400x600",
+  "opposite_side_asset_folder": null,
+  "completion_rule": "complete_full_sequence",
+  "source_strip": "source_sequence.png",
+  "frames": [
+    {
+      "index": 1,
+      "role": "RIGHT_REACH",
+      "filename": "PSW04_F_01_RIGHT_REACH.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 2,
+      "role": "SWITCH",
+      "filename": "PSW04_F_02_SWITCH.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 3,
+      "role": "LEFT_REACH",
+      "filename": "PSW04_F_03_LEFT_REACH.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 4,
+      "role": "SWITCH_BACK",
+      "filename": "PSW04_F_04_SWITCH_BACK.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 5,
+      "role": "RIGHT_REACH",
+      "filename": "PSW04_F_05_RIGHT_REACH.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 6,
+      "role": "RETURN",
+      "filename": "PSW04_F_06_RETURN.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    }
+  ]
+}

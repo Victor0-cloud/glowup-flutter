@@ -17,10 +17,15 @@ class WorkoutRestScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(workoutSessionControllerProvider);
     if (session == null || session.phase != WorkoutPhase.resting) {
-      return Scaffold(backgroundColor: Colors.transparent, body: GradientBackground(child: Container()));
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: GradientBackground(child: Container()),
+      );
     }
     final controller = ref.read(workoutSessionControllerProvider.notifier);
-    final completed = session.exerciseIndex > 0 ? session.workout.exercises[session.exerciseIndex - 1] : null;
+    final completed = session.exerciseIndex > 0
+        ? session.workout.exercises[session.exerciseIndex - 1]
+        : null;
     final next = session.currentExercise;
     final elapsedFraction = 1 - (session.remainingSeconds / kRestSeconds);
 
@@ -33,7 +38,12 @@ class WorkoutRestScreen extends ConsumerWidget {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    WorkoutHeaderBar(title: 'Rest Period', subtitle: completed == null ? null : '${completed.title.toLowerCase()} completed'),
+                    WorkoutHeaderBar(
+                      title: 'Rest Period',
+                      subtitle: completed == null
+                          ? null
+                          : '${completed.title.toLowerCase()} completed',
+                    ),
                     const SizedBox(height: 24),
                     WorkoutTimerRing(
                       progress: elapsedFraction,
@@ -42,43 +52,80 @@ class WorkoutRestScreen extends ConsumerWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('${session.remainingSeconds}', style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900)),
-                          Text('SECONDS', style: AppTextStyles.captionBold.copyWith(color: AppColors.textSecondary, fontSize: 12)),
+                          Text(
+                            '${session.remainingSeconds}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 48,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          Text(
+                            'SECONDS',
+                            style: AppTextStyles.captionBold.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 24),
                     if (completed != null)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10CD00).withValues(alpha: 0.14),
-                          border: Border.all(color: const Color(0xFF10CD00).withValues(alpha: 0.5)),
+                          color: const Color(
+                            0xFF10CD00,
+                          ).withValues(alpha: 0.14),
+                          border: Border.all(
+                            color: const Color(
+                              0xFF10CD00,
+                            ).withValues(alpha: 0.5),
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const AppIcon('check-circle', size: 16, color: Color(0xFF10CD00)),
+                            const AppIcon(
+                              'check-circle',
+                              size: 16,
+                              color: Color(0xFF10CD00),
+                            ),
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
                                 '${completed.title} Completed',
-                                style: const TextStyle(color: Color(0xFF10CD00), fontSize: 14, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                  color: Color(0xFF10CD00),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    if (completed != null && kExerciseReflectionConfigs.containsKey(completed.catalogId)) ...[
+                    if (completed != null &&
+                        kExerciseReflectionConfigs.containsKey(
+                          completed.catalogId,
+                        )) ...[
                       const SizedBox(height: 20),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: ExerciseReflectionCard(
                           key: ValueKey('reflection_${completed.catalogId}'),
-                          config: kExerciseReflectionConfigs[completed.catalogId]!,
-                          onSave: (summary) => controller.saveExerciseNote(completed.id, summary),
+                          config:
+                              kExerciseReflectionConfigs[completed.catalogId]!,
+                          onSave: (summary) => controller.saveExerciseNote(
+                            completed.id,
+                            summary,
+                          ),
                         ),
                       ),
                     ],
@@ -89,26 +136,56 @@ class WorkoutRestScreen extends ConsumerWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [AppColors.cardStart, AppColors.cardEnd]),
+                          gradient: const LinearGradient(
+                            colors: [AppColors.cardStart, AppColors.cardEnd],
+                          ),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(color: AppColors.cardBorder),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('UP NEXT', style: AppTextStyles.captionBold.copyWith(color: AppColors.gold, fontSize: 12)),
+                            Text(
+                              'UP NEXT',
+                              style: AppTextStyles.captionBold.copyWith(
+                                color: AppColors.gold,
+                                fontSize: 12,
+                              ),
+                            ),
                             const SizedBox(height: 8),
-                            PoseDisplayBox(exercise: next, height: 140, step: 1),
+                            PoseDisplayBox(
+                              exercise: next,
+                              height: 140,
+                              step: 1,
+                            ),
                             const SizedBox(height: 8),
-                            Text(next.title, style: AppTextStyles.screenTitle.copyWith(fontSize: 20, fontWeight: FontWeight.w900)),
+                            Text(
+                              next.title,
+                              style: AppTextStyles.screenTitle.copyWith(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
                             const SizedBox(height: 12),
-                            Container(height: 1, color: Colors.white.withValues(alpha: 0.07)),
+                            Container(
+                              height: 1,
+                              color: Colors.white.withValues(alpha: 0.07),
+                            ),
                             const SizedBox(height: 12),
                             Row(
                               children: [
-                                const AppIcon('clock', size: 16, color: AppColors.textSecondary),
+                                const AppIcon(
+                                  'clock',
+                                  size: 16,
+                                  color: AppColors.textSecondary,
+                                ),
                                 const SizedBox(width: 8),
-                                Text('Duration — ${next.formattedDuration}', style: AppTextStyles.subtitle.copyWith(fontSize: 14)),
+                                Text(
+                                  'Duration — ${next.formattedDuration}',
+                                  style: AppTextStyles.subtitle.copyWith(
+                                    fontSize: 14,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -131,7 +208,14 @@ class WorkoutRestScreen extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     alignment: Alignment.center,
-                    child: const Text('Skip Rest (+0:30)', style: TextStyle(color: Color(0xFF0A0B1E), fontSize: 16, fontWeight: FontWeight.w800)),
+                    child: const Text(
+                      'Skip Rest (+0:30)',
+                      style: TextStyle(
+                        color: Color(0xFF0A0B1E),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
                 ),
               ),

@@ -1,0 +1,40 @@
+{
+  "exerciseId": "EX065",
+  "name": "Sit-Up Reach",
+  "slug": "sit_up_reach",
+  "category": "Bedtime",
+  "difficulty": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "durationSeconds": 40,
+  "targetReps": 10,
+  "playbackType": "reps",
+  "loop": true,
+  "equipment": [],
+  "position": "supine_to_seated",
+  "imageSize": { "width": 277, "height": 265 },
+  "thumbnailFrame": "EX065_F_04_FULL_REACH.png",
+  "frames": [
+    { "order": 1, "file": "EX065_F_01_START.png", "label": "Start", "cue": "Lie back with knees bent, feet flat and arms overhead." },
+    { "order": 2, "file": "EX065_F_02_ARMS_FORWARD.png", "label": "Arms Forward", "cue": "Sweep your arms forward and gently lift your shoulders." },
+    { "order": 3, "file": "EX065_F_03_LIFT.png", "label": "Lift", "cue": "Continue lifting with control and keep your feet grounded." },
+    { "order": 4, "file": "EX065_F_04_FULL_REACH.png", "label": "Full Reach", "cue": "Reach toward your knees or shins without pulling your neck." },
+    { "order": 5, "file": "EX065_F_05_CONTROLLED_LOWER.png", "label": "Controlled Lower", "cue": "Lower slowly through the middle position." },
+    { "order": 6, "file": "EX065_F_06_RESET.png", "label": "Reset", "cue": "Return gently to the start and prepare for the next rep." }
+  ],
+  "safety": [
+    "Keep the feet grounded and avoid using momentum.",
+    "Maintain a neutral neck and lead with the chest rather than pulling the head.",
+    "Use a smaller lift or stop for sharp neck or lower-back pain."
+  ],
+  "voiceAutomation": {
+    "mode": "rep_count_and_movement_cues",
+    "continuousBreathingPrompts": false,
+    "bedtimeTone": "soft"
+  },
+  "aiCoachNote": {
+    "enabled": true,
+    "prompt": "How did Sit-Up Reach feel? Note neck or lower-back discomfort and how many controlled reps you completed.",
+    "trainingSignals": ["completed_reps", "neck_comfort", "lower_back_comfort", "range_of_motion", "pace_modification"]
+  }
+}

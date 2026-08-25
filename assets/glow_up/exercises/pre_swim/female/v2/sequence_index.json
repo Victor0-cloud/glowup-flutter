@@ -1,0 +1,64 @@
+{
+  "routine_id": "pre_swim_v1",
+  "women_only": true,
+  "sequence_count": 7,
+  "total_individual_frames": 42,
+  "sequences": [
+    {
+      "order": 1,
+      "routine_local_id": "PSW01",
+      "slug": "standing_chest_opener",
+      "title": "Standing Chest Opener",
+      "side_mode": "CENTERED",
+      "folder": "01_standing_chest_opener"
+    },
+    {
+      "order": 2,
+      "routine_local_id": "PSW02",
+      "slug": "triceps_lat_stretch",
+      "title": "Triceps & Lat Stretch",
+      "side_mode": "BOTH_SIDES",
+      "folder": "02_triceps_lat_stretch"
+    },
+    {
+      "order": 3,
+      "routine_local_id": "PSW03",
+      "slug": "streamline_side_bend",
+      "title": "Streamline Side Bend",
+      "side_mode": "BOTH_SIDES",
+      "folder": "03_streamline_side_bend"
+    },
+    {
+      "order": 4,
+      "routine_local_id": "PSW04",
+      "slug": "dryland_freestyle_reach",
+      "title": "Dryland Freestyle Reach",
+      "side_mode": "ALTERNATING",
+      "folder": "04_dryland_freestyle_reach"
+    },
+    {
+      "order": 5,
+      "routine_local_id": "PSW05",
+      "slug": "standing_calf_stretch",
+      "title": "Standing Calf Stretch",
+      "side_mode": "BOTH_SIDES",
+      "folder": "05_standing_calf_stretch"
+    },
+    {
+      "order": 6,
+      "routine_local_id": "PSW06",
+      "slug": "seated_90_90_hip_switch",
+      "title": "Seated 90/90 Hip Switch",
+      "side_mode": "ALTERNATING",
+      "folder": "06_seated_90_90_hip_switch"
+    },
+    {
+      "order": 7,
+      "routine_local_id": "PSW07",
+      "slug": "seated_figure_four_stretch",
+      "title": "Seated Figure-Four Stretch",
+      "side_mode": "BOTH_SIDES",
+      "folder": "07_seated_figure_four_stretch"
+    }
+  ]
+}

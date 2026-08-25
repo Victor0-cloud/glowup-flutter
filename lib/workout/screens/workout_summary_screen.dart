@@ -14,7 +14,12 @@ import '../widgets/workout_widgets.dart';
 /// skipped, and real elapsed time — comes straight from the completed
 /// session.
 class WorkoutSummaryScreen extends StatefulWidget {
-  const WorkoutSummaryScreen({super.key, required this.result, required this.onBack, required this.onDone});
+  const WorkoutSummaryScreen({
+    super.key,
+    required this.result,
+    required this.onBack,
+    required this.onDone,
+  });
 
   final WorkoutSessionResult result;
   final VoidCallback onBack;
@@ -30,7 +35,10 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   @override
   Widget build(BuildContext context) {
     final result = widget.result;
-    final totalMinutes = (result.totalDuration.inSeconds / 60).ceil().clamp(1, 999);
+    final totalMinutes = (result.totalDuration.inSeconds / 60).ceil().clamp(
+      1,
+      999,
+    );
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -41,7 +49,10 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    WorkoutHeaderBar(title: 'Workout Summary', onBack: widget.onBack),
+                    WorkoutHeaderBar(
+                      title: 'Workout Summary',
+                      onBack: widget.onBack,
+                    ),
                     const SizedBox(height: 8),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -60,33 +71,72 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text('Total Duration', style: AppTextStyles.caption.copyWith(fontSize: 12)),
-                                      Text('$totalMinutes min', style: AppTextStyles.screenTitle.copyWith(fontSize: 18, fontWeight: FontWeight.w800)),
+                                      Text(
+                                        'Total Duration',
+                                        style: AppTextStyles.caption.copyWith(
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      Text(
+                                        '$totalMinutes min',
+                                        style: AppTextStyles.screenTitle
+                                            .copyWith(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                      ),
                                     ],
                                   ),
                                 ),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text('Exercises Done', style: AppTextStyles.caption.copyWith(fontSize: 12)),
-                                      Text('${result.completedCount}/${result.exerciseResults.length}', style: const TextStyle(color: AppColors.ctaStart, fontSize: 18, fontWeight: FontWeight.w800)),
+                                      Text(
+                                        'Exercises Done',
+                                        style: AppTextStyles.caption.copyWith(
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${result.completedCount}/${result.exerciseResults.length}',
+                                        style: const TextStyle(
+                                          color: AppColors.ctaStart,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Container(height: 1, color: Colors.white.withValues(alpha: 0.07)),
+                            Container(
+                              height: 1,
+                              color: Colors.white.withValues(alpha: 0.07),
+                            ),
                             const SizedBox(height: 12),
                             Row(
                               children: [
-                                const AppIcon('award', size: 16, color: AppColors.gold),
+                                const AppIcon(
+                                  'award',
+                                  size: 16,
+                                  color: AppColors.gold,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text('${result.workout.title} complete — nice work!', style: AppTextStyles.captionBold.copyWith(color: AppColors.gold, fontSize: 13)),
+                                  child: Text(
+                                    '${result.workout.title} complete — nice work!',
+                                    style: AppTextStyles.captionBold.copyWith(
+                                      color: AppColors.gold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -100,17 +150,36 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('EXERCISE BREAKDOWN', style: AppTextStyles.captionBold.copyWith(color: AppColors.textSecondary, fontSize: 14)),
+                          Text(
+                            'EXERCISE BREAKDOWN',
+                            style: AppTextStyles.captionBold.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
                           const SizedBox(height: 10),
-                          for (var i = 0; i < result.exerciseResults.length; i++) ...[
-                            _ExerciseSummaryRow(result: result.exerciseResults[i]),
-                            if (i != result.exerciseResults.length - 1) const SizedBox(height: 10),
+                          for (
+                            var i = 0;
+                            i < result.exerciseResults.length;
+                            i++
+                          ) ...[
+                            _ExerciseSummaryRow(
+                              result: result.exerciseResults[i],
+                            ),
+                            if (i != result.exerciseResults.length - 1)
+                              const SizedBox(height: 10),
                           ],
                         ],
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Text('Rate this Workout', style: AppTextStyles.captionBold.copyWith(color: AppColors.textSecondary, fontSize: 14)),
+                    Text(
+                      'Rate this Workout',
+                      style: AppTextStyles.captionBold.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -150,7 +219,14 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     alignment: Alignment.center,
-                    child: const Text('Done', style: TextStyle(color: Color(0xFF0A0B1E), fontSize: 16, fontWeight: FontWeight.w800)),
+                    child: const Text(
+                      'Done',
+                      style: TextStyle(
+                        color: Color(0xFF0A0B1E),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -187,17 +263,32 @@ class _ExerciseSummaryRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(result.exercise.title, style: AppTextStyles.cardTitle.copyWith(fontSize: 14)),
-                    Text('$minutes:${seconds.toString().padLeft(2, '0')} min', style: AppTextStyles.caption.copyWith(fontSize: 12)),
+                    Text(
+                      result.exercise.title,
+                      style: AppTextStyles.cardTitle.copyWith(fontSize: 14),
+                    ),
+                    Text(
+                      '$minutes:${seconds.toString().padLeft(2, '0')} min',
+                      style: AppTextStyles.caption.copyWith(fontSize: 12),
+                    ),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.07), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(6),
+                ),
                 child: Text(
                   result.skipped ? 'Skipped' : 'Completed',
-                  style: TextStyle(color: result.skipped ? AppColors.textSecondary : AppColors.gold, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: result.skipped
+                        ? AppColors.textSecondary
+                        : AppColors.gold,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -211,7 +302,10 @@ class _ExerciseSummaryRow extends StatelessWidget {
             const SizedBox(height: 8),
             Container(height: 1, color: Colors.white.withValues(alpha: 0.07)),
             const SizedBox(height: 8),
-            Text('AI Coach note: ${result.note}', style: AppTextStyles.caption.copyWith(fontSize: 12)),
+            Text(
+              'AI Coach note: ${result.note}',
+              style: AppTextStyles.caption.copyWith(fontSize: 12),
+            ),
           ],
         ],
       ),

@@ -1,0 +1,15 @@
+{
+  "module": "Period & Cycle",
+  "entryPoints": ["Today dashboard cycle card", "Profile > Period & Cycle", "Onboarding optional setup"],
+  "routes": [
+    {"path": "/onboarding/cycle-awareness", "screen": "CycleAwarenessOptIn", "auth": true, "optional": true},
+    {"path": "/cycle/setup", "screen": "CycleSetup", "auth": true},
+    {"path": "/cycle", "screen": "CycleHome", "auth": true},
+    {"path": "/cycle/log-period", "screen": "LogPeriod", "auth": true},
+    {"path": "/cycle/log-symptoms", "screen": "CycleDailyCheckIn", "auth": true},
+    {"path": "/cycle/calendar", "screen": "CycleCalendar", "auth": true},
+    {"path": "/cycle/calendar/:date/notebook", "screen": "DailyNotebook", "auth": true},
+    {"path": "/cycle/insights", "screen": "CycleInsights", "auth": true},
+    {"path": "/settings/cycle-privacy", "screen": "CyclePrivacy", "auth": true}
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "routine_local_id": "PSW01",
+  "title": "Standing Chest Opener",
+  "women_only": true,
+  "side_mode": "CENTERED",
+  "frame_count": 6,
+  "preferred_asset_folder": "app_frames_400x600",
+  "opposite_side_asset_folder": null,
+  "completion_rule": "complete_full_sequence",
+  "source_strip": "source_sequence.png",
+  "frames": [
+    {
+      "index": 1,
+      "role": "START",
+      "filename": "PSW01_F_01_START.png",
+      "native_size": "318x795",
+      "app_size": "400x600"
+    },
+    {
+      "index": 2,
+      "role": "OPEN",
+      "filename": "PSW01_F_02_OPEN.png",
+      "native_size": "319x795",
+      "app_size": "400x600"
+    },
+    {
+      "index": 3,
+      "role": "CLASP",
+      "filename": "PSW01_F_03_CLASP.png",
+      "native_size": "318x795",
+      "app_size": "400x600"
+    },
+    {
+      "index": 4,
+      "role": "EXTEND",
+      "filename": "PSW01_F_04_EXTEND.png",
+      "native_size": "318x795",
+      "app_size": "400x600"
+    },
+    {
+      "index": 5,
+      "role": "HOLD",
+      "filename": "PSW01_F_05_HOLD.png",
+      "native_size": "319x795",
+      "app_size": "400x600"
+    },
+    {
+      "index": 6,
+      "role": "RETURN",
+      "filename": "PSW01_F_06_RETURN.png",
+      "native_size": "318x795",
+      "app_size": "400x600"
+    }
+  ]
+}

@@ -6,13 +6,12 @@ import '../../onboarding/models/onboarding_profile.dart';
 /// What the AI Brain knows about the user's fitness profile going into a
 /// workout — matches 31/32c/33's "AI Brain Data Flow" **RECEIVES ←** side
 /// (fitness level, time of day, recent activity). Nothing here is
-/// fabricated: [fitnessLevel] and [gender] come straight from onboarding,
-/// [period] from the existing TOD resolver.
+/// fabricated: [fitnessLevel] comes straight from onboarding, [period]
+/// from the existing TOD resolver.
 class WorkoutBrainContext {
-  const WorkoutBrainContext({required this.fitnessLevel, required this.gender, required this.period});
+  const WorkoutBrainContext({required this.fitnessLevel, required this.period});
 
   final FitnessLevel? fitnessLevel;
-  final Gender? gender;
   final TodPeriod period;
 }
 
@@ -20,7 +19,10 @@ final workoutBrainContextProvider = Provider<WorkoutBrainContext?>((ref) {
   final brain = ref.watch(brainContextProvider);
   if (brain == null) return null;
   final period = ref.watch(currentTodPeriodProvider);
-  return WorkoutBrainContext(fitnessLevel: brain.profile.fitnessLevel, gender: brain.profile.gender, period: period);
+  return WorkoutBrainContext(
+    fitnessLevel: brain.profile.fitnessLevel,
+    period: period,
+  );
 });
 
 /// The **SENDS →** side of 31/32c/33's annotations: category selections,
@@ -58,8 +60,14 @@ class WorkoutSignalLog extends StateNotifier<List<WorkoutSignal>> {
   WorkoutSignalLog() : super(const []);
 
   void log(WorkoutSignalType type, {String? detail}) {
-    state = [...state, WorkoutSignal(type: type, at: DateTime.now(), detail: detail)];
+    state = [
+      ...state,
+      WorkoutSignal(type: type, at: DateTime.now(), detail: detail),
+    ];
   }
 }
 
-final workoutSignalLogProvider = StateNotifierProvider<WorkoutSignalLog, List<WorkoutSignal>>((ref) => WorkoutSignalLog());
+final workoutSignalLogProvider =
+    StateNotifierProvider<WorkoutSignalLog, List<WorkoutSignal>>(
+      (ref) => WorkoutSignalLog(),
+    );

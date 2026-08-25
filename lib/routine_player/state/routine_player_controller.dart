@@ -6,6 +6,13 @@ import '../models/pose_definition.dart';
 import '../models/routine_player_state.dart';
 import '../voice/flutter_tts_speaker.dart';
 import '../voice/voice_coach.dart';
+import '../../brain/events/learning_event.dart';
+import '../../brain/events/learning_event_controller.dart';
+import '../../brain/reactive/reactive_event_processor.dart';
+import '../../workout/brain/workout_brain.dart';
+import '../../workout/models/workout_completion_record.dart'
+    show WorkoutCompletionRecord;
+import '../../workout/models/workout_models.dart';
 
 /// The RoutinePlayer's single authoritative clock and state machine
 /// (Sections 7-8). One `Timer.periodic` ticks every 100ms; every derived
@@ -15,11 +22,90 @@ import '../voice/voice_coach.dart';
 /// elapsed time — every dependent system (progress, movement, voice)
 /// freezes automatically because they all read from it.
 class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
-  RoutinePlayerController(this._coach, this._music) : super(null);
+  RoutinePlayerController(
+    this._coach,
+    this._music,
+    this._log, [
+    this._brainEvents,
+    this._brainReactive,
+  ]) : super(null);
 
   final VoiceCoach _coach;
   final MusicManager _music;
+  final WorkoutSignalLog _log;
+
+  /// Optional Brain (Tier 0/1) hooks — null in every existing direct-
+  /// construction test site, which keeps every one of them compiling and
+  /// behaving exactly as before. Real production wiring (the
+  /// `routinePlayerControllerProvider` below) always supplies both.
+  final LearningEventController? _brainEvents;
+  final ReactiveEventProcessor? _brainReactive;
   Timer? _ticker;
+  int _eventIdSuffix = 0;
+
+  /// Tier 0 ingest + Tier 1 reactive processing for one exercise-lifecycle
+  /// event — fire-and-forget from this synchronous state machine, exactly
+  /// like the pre-existing `_log.log(...)` calls beside it. Never touches
+  /// Tier 2/3 (no adaptation decision or AI-provider call happens here). A
+  /// no-op if the Brain hooks weren't supplied (e.g. in a direct-
+  /// construction test that doesn't need Brain-side assertions).
+  void _emitExerciseEvent(
+    LearningEventType type, {
+    required String exerciseId,
+    String? workoutId,
+    required String sessionId,
+    String? exerciseName,
+    String? category,
+    // Only ever true for exerciseCompleted (see the call site in
+    // _finishActiveExercise) — structured name/category/ids only, never
+    // free text, so completed exercises are one of the event types this
+    // build explicitly opts into the Coach's remote context. Every other
+    // lifecycle type (started/skipped/stoppedEarly/repeated/replaced)
+    // stays deviceLocal-only.
+    ConsentScope consentScope = ConsentScope.deviceLocal,
+  }) {
+    if (_brainEvents == null || _brainReactive == null) return;
+    final event = LearningEvent.exerciseLifecycle(
+      id: '${type.name}_${exerciseId}_${DateTime.now().microsecondsSinceEpoch}_${_eventIdSuffix++}',
+      userId: WorkoutCompletionRecord.localProfileId,
+      type: type,
+      exerciseId: exerciseId,
+      workoutId: workoutId,
+      sessionId: sessionId,
+      occurredAt: DateTime.now(),
+      exerciseName: exerciseName,
+      category: category,
+      consentScope: consentScope,
+    );
+    unawaited(_ingestAndProcess(event));
+  }
+
+  void _emitWorkoutCompletedEvent({
+    required String workoutId,
+    required String sessionId,
+    required DateTime startedAt,
+    required Set<String> completedIds,
+    required Set<String> skippedIds,
+  }) {
+    if (_brainEvents == null || _brainReactive == null) return;
+    final event = LearningEvent.workoutCompleted(
+      id: 'workoutCompleted_${workoutId}_${DateTime.now().microsecondsSinceEpoch}_${_eventIdSuffix++}',
+      userId: WorkoutCompletionRecord.localProfileId,
+      workoutId: workoutId,
+      totalDurationSeconds: DateTime.now().difference(startedAt).inSeconds,
+      completedExerciseIds: completedIds.toList(),
+      skippedExerciseIds: skippedIds.toList(),
+      sessionId: sessionId,
+      occurredAt: DateTime.now(),
+    );
+    unawaited(_ingestAndProcess(event));
+  }
+
+  Future<void> _ingestAndProcess(LearningEvent event) async {
+    final saved = await _brainEvents!.ingest(event);
+    if (saved == null) return;
+    await _brainReactive!.process(saved);
+  }
 
   void _cancelAllPendingTimers() {
     for (final t in _pendingRestoreTimers) {
@@ -40,12 +126,38 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
     super.dispose();
   }
 
-  void startRoutine(List<ExerciseDefinition> routine, {VoiceMode voiceMode = VoiceMode.coachOn}) {
+  void startRoutine(
+    List<ExerciseDefinition> routine, {
+    VoiceMode voiceMode = VoiceMode.coachOn,
+    Workout? sourceWorkout,
+  }) {
     if (routine.isEmpty) {
-      state = RoutinePlayerState(routine: routine, exerciseIndex: 0, phase: RoutinePlayerPhase.error, startedAt: DateTime.now(), errorMessage: 'No exercises in routine.');
+      state = RoutinePlayerState(
+        routine: routine,
+        exerciseIndex: 0,
+        phase: RoutinePlayerPhase.error,
+        startedAt: DateTime.now(),
+        errorMessage: 'No exercises in routine.',
+        sourceWorkout: sourceWorkout,
+      );
       return;
     }
-    state = RoutinePlayerState(routine: routine, exerciseIndex: 0, phase: RoutinePlayerPhase.prepare, voiceMode: voiceMode, startedAt: DateTime.now());
+    state = RoutinePlayerState(
+      routine: routine,
+      exerciseIndex: 0,
+      phase: RoutinePlayerPhase.prepare,
+      voiceMode: voiceMode,
+      startedAt: DateTime.now(),
+      sourceWorkout: sourceWorkout,
+    );
+    if (sourceWorkout != null) {
+      _log.log(
+        WorkoutSignalType.categorySelected,
+        detail: sourceWorkout.category.name,
+      );
+      _log.log(WorkoutSignalType.workoutSelected, detail: sourceWorkout.id);
+      _log.log(WorkoutSignalType.workoutStarted, detail: sourceWorkout.id);
+    }
     _startTicker();
     _runPrepareSequence();
   }
@@ -100,7 +212,10 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
   void _beginCountdown() {
     final s = state!;
     _countdownAccumMs = 0;
-    state = s.copyWith(phase: RoutinePlayerPhase.countdown, countdownSecondsLeft: 3);
+    state = s.copyWith(
+      phase: RoutinePlayerPhase.countdown,
+      countdownSecondsLeft: 3,
+    );
     _fireOnce(VoiceEvent.countdown3);
   }
 
@@ -111,7 +226,8 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
   /// suspiciously fast (e.g. silently unavailable) or in Silent/Cues-only
   /// modes where nothing is actually spoken but the same text is still
   /// shown on screen and deserves real reading time.
-  Duration _readingFloor(String text) => Duration(milliseconds: (text.length * 55).clamp(400, 6000));
+  Duration _readingFloor(String text) =>
+      Duration(milliseconds: (text.length * 55).clamp(400, 6000));
 
   Object? _prepareToken;
   final List<Timer> _pendingPrepareTimers = [];
@@ -143,26 +259,45 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
   /// no-op even after it eventually resumes from an await.
   Future<void> _runPrepareSequence() async {
     final startState = state;
-    if (startState == null || startState.phase != RoutinePlayerPhase.prepare) return;
+    if (startState == null || startState.phase != RoutinePlayerPhase.prepare) {
+      return;
+    }
     final token = Object();
     _prepareToken = token;
     final ex = startState.currentExercise;
-    bool cancelled() => _prepareToken != token || state?.phase != RoutinePlayerPhase.prepare;
+    bool cancelled() =>
+        _prepareToken != token || state?.phase != RoutinePlayerPhase.prepare;
 
     Future<void> speakSegment(String event, String text) async {
       if (state != null && !state!.eventFired(event)) {
-        state = state!.copyWith(firedVoiceEvents: {...state!.firedVoiceEvents, '${state!.exerciseIndex}:$event'});
+        state = state!.copyWith(
+          firedVoiceEvents: {
+            ...state!.firedVoiceEvents,
+            '${state!.exerciseIndex}:$event',
+          },
+        );
         await Future.wait([
-          _coach.fire(event, startState.voiceMode, exercise: ex, nextExercise: startState.nextExercise),
+          _coach.fire(
+            event,
+            startState.voiceMode,
+            exercise: ex,
+            nextExercise: startState.nextExercise,
+          ),
           _cancellableDelay(_readingFloor(text)),
         ]);
         if (startState.voiceMode != VoiceMode.silent) _duckThenRestore();
       }
     }
 
-    await speakSegment(VoiceEvent.exercisePrepare, '${ex.voiceScript.intro} ${ex.voiceScript.benefit}');
+    await speakSegment(
+      VoiceEvent.exercisePrepare,
+      '${ex.voiceScript.intro} ${ex.voiceScript.benefit}',
+    );
     if (cancelled()) return;
-    await speakSegment(VoiceEvent.prepareInstruction, ex.voiceScript.setupInstruction);
+    await speakSegment(
+      VoiceEvent.prepareInstruction,
+      ex.voiceScript.setupInstruction,
+    );
     if (cancelled()) return;
     await speakSegment(VoiceEvent.prepareReady, 'Ready?');
     if (cancelled()) return;
@@ -177,7 +312,18 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
     final next = s.countdownSecondsLeft - 1;
     if (next <= 0) {
       _fireOnce(VoiceEvent.exerciseStart);
-      state = s.copyWith(phase: RoutinePlayerPhase.active, activeElapsedMs: 0, clearLastAnnouncedPoseId: true);
+      _emitExerciseEvent(
+        LearningEventType.exerciseStarted,
+        exerciseId: s.currentExercise.id,
+        workoutId: s.sourceWorkout?.id,
+        sessionId:
+            '${s.sourceWorkout?.id ?? 'qa-routine'}_${s.startedAt.millisecondsSinceEpoch}',
+      );
+      state = s.copyWith(
+        phase: RoutinePlayerPhase.active,
+        activeElapsedMs: 0,
+        clearLastAnnouncedPoseId: true,
+      );
       return;
     }
     state = s.copyWith(countdownSecondsLeft: next);
@@ -187,7 +333,10 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
   void _tickActive(int deltaMs) {
     final s = state!;
     final ex = s.currentExercise;
-    final newElapsedMs = (s.activeElapsedMs + deltaMs).clamp(0, ex.durationSeconds * 1000);
+    final newElapsedMs = (s.activeElapsedMs + deltaMs).clamp(
+      0,
+      ex.durationSeconds * 1000,
+    );
     state = s.copyWith(activeElapsedMs: newElapsedMs);
     final remaining = s.activeRemainingSeconds;
     final elapsed = s.activeElapsedSeconds;
@@ -200,19 +349,32 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
       final pose = currentPoseFor(ex, elapsed);
       if (pose.poseId != s.lastAnnouncedPoseId) {
         state = state!.copyWith(lastAnnouncedPoseId: pose.poseId);
-        final text = s.voiceMode == VoiceMode.coachOn ? pose.voiceCue : (s.voiceMode == VoiceMode.cuesOnly ? pose.cuesOnlyVoiceCue : null);
+        final text = s.voiceMode == VoiceMode.coachOn
+            ? pose.voiceCue
+            : (s.voiceMode == VoiceMode.cuesOnly
+                  ? pose.cuesOnlyVoiceCue
+                  : null);
         if (text != null) {
           _coach.speakText(text, s.voiceMode);
           _duckThenRestore();
         }
       }
     } else {
-      if (ex.voiceScript.quarterCue != null && ex.durationSeconds > 16 && elapsed >= ex.durationSeconds / 4 && elapsed < ex.durationSeconds / 2) {
+      if (ex.voiceScript.quarterCue != null &&
+          ex.durationSeconds > 16 &&
+          elapsed >= ex.durationSeconds / 4 &&
+          elapsed < ex.durationSeconds / 2) {
         _fireOnce(VoiceEvent.quarterCue);
       }
-      if (ex.durationSeconds > 20 && elapsed >= ex.durationSeconds / 2) _fireOnce(VoiceEvent.halfway);
-      if (ex.durationSeconds > 15 && remaining <= 10 && remaining > 5) _fireOnce(VoiceEvent.timeRemaining10);
-      if (ex.durationSeconds > 8 && remaining <= 5 && remaining > 3) _fireOnce(VoiceEvent.timeRemaining5);
+      if (ex.durationSeconds > 20 && elapsed >= ex.durationSeconds / 2) {
+        _fireOnce(VoiceEvent.halfway);
+      }
+      if (ex.durationSeconds > 15 && remaining <= 10 && remaining > 5) {
+        _fireOnce(VoiceEvent.timeRemaining10);
+      }
+      if (ex.durationSeconds > 8 && remaining <= 5 && remaining > 3) {
+        _fireOnce(VoiceEvent.timeRemaining5);
+      }
       if (remaining <= 3 && remaining > 2) _fireOnce(VoiceEvent.finish3);
       if (remaining <= 2 && remaining > 1) _fireOnce(VoiceEvent.finish2);
       if (remaining <= 1 && remaining > 0) _fireOnce(VoiceEvent.finish1);
@@ -226,7 +388,10 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
 
   void _tickRest(int deltaMs) {
     final s = state!;
-    final newElapsedMs = (s.restElapsedMs + deltaMs).clamp(0, s.restTotalSeconds * 1000);
+    final newElapsedMs = (s.restElapsedMs + deltaMs).clamp(
+      0,
+      s.restTotalSeconds * 1000,
+    );
     state = s.copyWith(restElapsedMs: newElapsedMs);
     final remaining = s.restRemainingSeconds;
     if (s.restTotalSeconds >= 5) {
@@ -242,11 +407,51 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
 
   void _finishActiveExercise({required bool skipped}) {
     final s = state!;
-    final completedSet = {...s.completedIds, if (!skipped) s.currentExercise.id};
+    final completedSet = {
+      ...s.completedIds,
+      if (!skipped) s.currentExercise.id,
+    };
     final skippedSet = {...s.skippedIds, if (skipped) s.currentExercise.id};
+    _log.log(
+      skipped
+          ? WorkoutSignalType.exerciseSkipped
+          : WorkoutSignalType.exerciseCompleted,
+      detail: s.currentExercise.id,
+    );
+    final brainSessionId =
+        '${s.sourceWorkout?.id ?? 'qa-routine'}_${s.startedAt.millisecondsSinceEpoch}';
+    _emitExerciseEvent(
+      skipped
+          ? LearningEventType.exerciseSkipped
+          : LearningEventType.exerciseCompleted,
+      exerciseId: s.currentExercise.id,
+      workoutId: s.sourceWorkout?.id,
+      sessionId: brainSessionId,
+      exerciseName: skipped ? null : s.currentExercise.displayName,
+      category: skipped ? null : s.currentExercise.category,
+      consentScope: skipped
+          ? ConsentScope.deviceLocal
+          : ConsentScope.aiExpressionEligible,
+    );
     if (s.isLastExercise) {
       _fireOnce(VoiceEvent.routineComplete);
-      state = s.copyWith(phase: RoutinePlayerPhase.complete, completedIds: completedSet, skippedIds: skippedSet, finishedAt: DateTime.now());
+      _log.log(
+        WorkoutSignalType.workoutCompleted,
+        detail: s.sourceWorkout?.id ?? 'qa-routine',
+      );
+      _emitWorkoutCompletedEvent(
+        workoutId: s.sourceWorkout?.id ?? 'qa-routine',
+        sessionId: brainSessionId,
+        startedAt: s.startedAt,
+        completedIds: completedSet,
+        skippedIds: skippedSet,
+      );
+      state = s.copyWith(
+        phase: RoutinePlayerPhase.complete,
+        completedIds: completedSet,
+        skippedIds: skippedSet,
+        finishedAt: DateTime.now(),
+      );
       return;
     }
     _fireOnce(VoiceEvent.restStart);
@@ -255,7 +460,10 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
       phase: RoutinePlayerPhase.rest,
       exerciseIndex: s.exerciseIndex + 1,
       restElapsedMs: 0,
-      restTotalSeconds: 30,
+      // See `Workout.restSecondsOverride` — null for every routine except
+      // the ones that explicitly opt in (e.g. Pre-Swim's 5 seconds), so
+      // this stays exactly 30 for every other routine, unchanged.
+      restTotalSeconds: s.sourceWorkout?.restSecondsOverride ?? 30,
       completedIds: completedSet,
       skippedIds: skippedSet,
     );
@@ -282,9 +490,16 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
   void _fireOnce(String event) {
     final s = state;
     if (s == null || s.eventFired(event)) return;
-    state = s.copyWith(firedVoiceEvents: {...s.firedVoiceEvents, '${s.exerciseIndex}:$event'});
+    state = s.copyWith(
+      firedVoiceEvents: {...s.firedVoiceEvents, '${s.exerciseIndex}:$event'},
+    );
     final next = s.nextExercise;
-    _coach.fire(event, s.voiceMode, exercise: s.currentExercise, nextExercise: next);
+    _coach.fire(
+      event,
+      s.voiceMode,
+      exercise: s.currentExercise,
+      nextExercise: next,
+    );
     if (s.voiceMode != VoiceMode.silent) _duckThenRestore();
   }
 
@@ -320,15 +535,24 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
 
   void previousExercise() {
     final s = state;
-    if (s == null || s.phase != RoutinePlayerPhase.active || s.exerciseIndex == 0) return;
+    if (s == null ||
+        s.phase != RoutinePlayerPhase.active ||
+        s.exerciseIndex == 0) {
+      return;
+    }
     _coach.stop();
     state = s.copyWith(exerciseIndex: s.exerciseIndex - 1, activeElapsedMs: 0);
   }
 
   void skipExercise() {
     final s = state;
-    if (s == null || (s.phase != RoutinePlayerPhase.active && s.phase != RoutinePlayerPhase.paused)) return;
-    _coach.stop(); // no audio from the skipped exercise may continue (Section 21)
+    if (s == null ||
+        (s.phase != RoutinePlayerPhase.active &&
+            s.phase != RoutinePlayerPhase.paused)) {
+      return;
+    }
+    _coach
+        .stop(); // no audio from the skipped exercise may continue (Section 21)
     _finishActiveExercise(skipped: true);
   }
 
@@ -336,13 +560,21 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
   /// rest, never restarts it (Section 24).
   void addRestTime(int seconds) {
     final s = state;
-    if (s == null || (s.phase != RoutinePlayerPhase.rest && s.phase != RoutinePlayerPhase.restPaused)) return;
+    if (s == null ||
+        (s.phase != RoutinePlayerPhase.rest &&
+            s.phase != RoutinePlayerPhase.restPaused)) {
+      return;
+    }
     state = s.copyWith(restTotalSeconds: s.restTotalSeconds + seconds);
   }
 
   void skipRest() {
     final s = state;
-    if (s == null || (s.phase != RoutinePlayerPhase.rest && s.phase != RoutinePlayerPhase.restPaused)) return;
+    if (s == null ||
+        (s.phase != RoutinePlayerPhase.rest &&
+            s.phase != RoutinePlayerPhase.restPaused)) {
+      return;
+    }
     _coach.stop();
     state = s.copyWith(phase: RoutinePlayerPhase.prepare, activeElapsedMs: 0);
     _runPrepareSequence();
@@ -368,14 +600,21 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
   void setDebugFrameDuration(int? ms) {
     final s = state;
     if (s == null) return;
-    state = s.copyWith(debugFrameDurationMs: ms, clearDebugFrameDurationMs: ms == null);
+    state = s.copyWith(
+      debugFrameDurationMs: ms,
+      clearDebugFrameDurationMs: ms == null,
+    );
   }
 
   void requestExit() {
     final s = state;
     if (s == null || s.phase == RoutinePlayerPhase.exitConfirmation) return;
-    _coach.stop(); // intentional user action — allowed to cancel in-flight prepare speech
-    state = s.copyWith(phase: RoutinePlayerPhase.exitConfirmation, phaseBeforeExit: s.phase);
+    _coach
+        .stop(); // intentional user action — allowed to cancel in-flight prepare speech
+    state = s.copyWith(
+      phase: RoutinePlayerPhase.exitConfirmation,
+      phaseBeforeExit: s.phase,
+    );
   }
 
   void cancelExit() {
@@ -385,6 +624,18 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
   }
 
   void endSession() {
+    final s = state;
+    if (s != null &&
+        (s.phase == RoutinePlayerPhase.active ||
+            s.phase == RoutinePlayerPhase.paused)) {
+      _emitExerciseEvent(
+        LearningEventType.exerciseStoppedEarly,
+        exerciseId: s.currentExercise.id,
+        workoutId: s.sourceWorkout?.id,
+        sessionId:
+            '${s.sourceWorkout?.id ?? 'qa-routine'}_${s.startedAt.millisecondsSinceEpoch}',
+      );
+    }
     _ticker?.cancel();
     _ticker = null;
     _prepareToken = null;
@@ -399,20 +650,35 @@ class RoutinePlayerController extends StateNotifier<RoutinePlayerState?> {
 /// is resolved, shared by every RoutinePlayer screen (Section 16/23).
 /// [frameDurationOverrideMs] is QA-only (Section 15's slow-motion
 /// inspection mode) — production code never passes it.
-PoseDefinition currentPoseFor(ExerciseDefinition exercise, double elapsedSeconds, {int? frameDurationOverrideMs}) {
+PoseDefinition currentPoseFor(
+  ExerciseDefinition exercise,
+  double elapsedSeconds, {
+  int? frameDurationOverrideMs,
+}) {
   final bilateral = exercise.bilateralFrames;
   if (bilateral != null) {
-    return bilateralPoseFor(bilateral, elapsedSeconds, exercise.durationSeconds.toDouble(), frameDurationOverrideMs: frameDurationOverrideMs);
+    return bilateralPoseFor(
+      bilateral,
+      elapsedSeconds,
+      exercise.durationSeconds.toDouble(),
+      frameDurationOverrideMs: frameDurationOverrideMs,
+    );
   }
   switch (exercise.loopMode) {
     case LoopMode.continuousLoop:
       final cycleElapsed = elapsedSeconds % exercise.loopCycleSeconds;
       final perPose = exercise.loopCycleSeconds / exercise.poses.length;
-      final idx = (cycleElapsed / perPose).floor().clamp(0, exercise.poses.length - 1);
+      final idx = (cycleElapsed / perPose).floor().clamp(
+        0,
+        exercise.poses.length - 1,
+      );
       return exercise.poses[idx];
 
     case LoopMode.timedCycle:
-      final totalCycle = exercise.poses.fold<double>(0, (sum, p) => sum + (p.phaseSeconds ?? 1));
+      final totalCycle = exercise.poses.fold<double>(
+        0,
+        (sum, p) => sum + (p.phaseSeconds ?? 1),
+      );
       var cycleElapsed = totalCycle == 0 ? 0.0 : elapsedSeconds % totalCycle;
       for (final pose in exercise.poses) {
         final dur = pose.phaseSeconds ?? 1;
@@ -422,7 +688,13 @@ PoseDefinition currentPoseFor(ExerciseDefinition exercise, double elapsedSeconds
       return exercise.poses.last;
 
     case LoopMode.holdAfterSetup:
-      final settle = exercise.poses.where((p) => p.purpose != PosePurpose.hold && p.purpose != PosePurpose.finish).toList();
+      final settle = exercise.poses
+          .where(
+            (p) =>
+                p.purpose != PosePurpose.hold &&
+                p.purpose != PosePurpose.finish,
+          )
+          .toList();
       final finish = exercise.finishPoses;
       // Each finish pose defaults to a 1-second slot (Tree Pose/Savasana's
       // single un-timed RESET/RECOVERY frame, unchanged from before this
@@ -431,7 +703,10 @@ PoseDefinition currentPoseFor(ExerciseDefinition exercise, double elapsedSeconds
       // (Legs Up Wall/Reclined Butterfly's BEND_KNEES_EXIT+RECOVERY /
       // CLOSE_KNEES+RESET) where a flat 1s-per-frame split would cut the
       // exit short instead of the approved 3s+2s split.
-      final finishSeconds = finish.fold<double>(0, (sum, p) => sum + (p.phaseSeconds ?? 1));
+      final finishSeconds = finish.fold<double>(
+        0,
+        (sum, p) => sum + (p.phaseSeconds ?? 1),
+      );
       final remaining = exercise.durationSeconds - elapsedSeconds;
       if (finish.isNotEmpty && remaining <= finishSeconds) {
         var into = finishSeconds - remaining;
@@ -444,7 +719,10 @@ PoseDefinition currentPoseFor(ExerciseDefinition exercise, double elapsedSeconds
       }
       if (settle.isNotEmpty && elapsedSeconds < exercise.loopCycleSeconds) {
         final perPose = exercise.loopCycleSeconds / settle.length;
-        final idx = (elapsedSeconds / perPose).floor().clamp(0, settle.length - 1);
+        final idx = (elapsedSeconds / perPose).floor().clamp(
+          0,
+          settle.length - 1,
+        );
         return settle[idx];
       }
       return exercise.holdPose;
@@ -455,8 +733,14 @@ PoseDefinition currentPoseFor(ExerciseDefinition exercise, double elapsedSeconds
       // never repeating frame 1 or the last frame back-to-back at the
       // turnaround. A true mirror-image reverse.
       final poses = exercise.poses;
-      final sequence = [...poses, for (var i = poses.length - 2; i >= 1; i--) poses[i]];
-      final totalCycle = sequence.fold<double>(0, (sum, p) => sum + (p.phaseSeconds ?? 1));
+      final sequence = [
+        ...poses,
+        for (var i = poses.length - 2; i >= 1; i--) poses[i],
+      ];
+      final totalCycle = sequence.fold<double>(
+        0,
+        (sum, p) => sum + (p.phaseSeconds ?? 1),
+      );
       var cycleElapsed = totalCycle == 0 ? 0.0 : elapsedSeconds % totalCycle;
       for (final pose in sequence) {
         final dur = pose.phaseSeconds ?? 1;
@@ -471,8 +755,13 @@ PoseDefinition currentPoseFor(ExerciseDefinition exercise, double elapsedSeconds
       // not a full mirror-reverse, since frame 4 and frame 1 are both
       // tabletop positions and the jump between them reads as seamless).
       final byOrder = {for (final pose in exercise.poses) pose.order: pose};
-      final sequence = [for (final order in exercise.customLoopOrder!) byOrder[order]!];
-      final totalCycle = sequence.fold<double>(0, (sum, p) => sum + (p.phaseSeconds ?? 1));
+      final sequence = [
+        for (final order in exercise.customLoopOrder!) byOrder[order]!,
+      ];
+      final totalCycle = sequence.fold<double>(
+        0,
+        (sum, p) => sum + (p.phaseSeconds ?? 1),
+      );
       var cycleElapsed = totalCycle == 0 ? 0.0 : elapsedSeconds % totalCycle;
       for (final pose in sequence) {
         final dur = pose.phaseSeconds ?? 1;
@@ -480,6 +769,40 @@ PoseDefinition currentPoseFor(ExerciseDefinition exercise, double elapsedSeconds
         cycleElapsed -= dur;
       }
       return sequence.last;
+
+    case LoopMode.timedCycleAfterSetup:
+      final setup = exercise.poses
+          .where((p) => p.purpose == PosePurpose.setup)
+          .toList();
+      final cycle = exercise.poses
+          .where((p) => p.purpose != PosePurpose.setup)
+          .toList();
+      final setupSeconds = setup.fold<double>(
+        0,
+        (sum, p) => sum + (p.phaseSeconds ?? 1),
+      );
+      if (setup.isNotEmpty && elapsedSeconds < setupSeconds) {
+        var into = elapsedSeconds;
+        for (final pose in setup) {
+          final dur = pose.phaseSeconds ?? 1;
+          if (into < dur) return pose;
+          into -= dur;
+        }
+        return setup.last;
+      }
+      final cycleTotal = cycle.fold<double>(
+        0,
+        (sum, p) => sum + (p.phaseSeconds ?? 1),
+      );
+      var cycleElapsed = cycleTotal == 0
+          ? 0.0
+          : (elapsedSeconds - setupSeconds) % cycleTotal;
+      for (final pose in cycle) {
+        final dur = pose.phaseSeconds ?? 1;
+        if (cycleElapsed < dur) return pose;
+        cycleElapsed -= dur;
+      }
+      return cycle.isEmpty ? exercise.poses.last : cycle.last;
   }
 }
 
@@ -491,13 +814,24 @@ PoseDefinition currentPoseFor(ExerciseDefinition exercise, double elapsedSeconds
 /// [PosePurpose.active] (the "bottom" position) is held for
 /// [BilateralFrameSequence.bottomHoldMultiplier]x as long as a
 /// transitional frame, per Section 3.
-PoseDefinition bilateralPoseFor(BilateralFrameSequence seq, double elapsedSeconds, double totalDurationSeconds, {int? frameDurationOverrideMs}) {
+PoseDefinition bilateralPoseFor(
+  BilateralFrameSequence seq,
+  double elapsedSeconds,
+  double totalDurationSeconds, {
+  int? frameDurationOverrideMs,
+}) {
   final half = totalDurationSeconds / 2;
   final onRightSide = elapsedSeconds >= half;
   final frames = onRightSide ? seq.right : seq.left;
-  final localElapsedMs = (onRightSide ? elapsedSeconds - half : elapsedSeconds) * 1000;
+  final localElapsedMs =
+      (onRightSide ? elapsedSeconds - half : elapsedSeconds) * 1000;
   final frameMs = (frameDurationOverrideMs ?? seq.frameDurationMs).toDouble();
-  final weights = [for (final f in frames) f.purpose == PosePurpose.active ? frameMs * seq.bottomHoldMultiplier : frameMs];
+  final weights = [
+    for (final f in frames)
+      f.purpose == PosePurpose.active
+          ? frameMs * seq.bottomHoldMultiplier
+          : frameMs,
+  ];
   final totalCycleMs = weights.fold<double>(0, (a, b) => a + b);
   var cursor = totalCycleMs == 0 ? 0.0 : localElapsedMs % totalCycleMs;
   for (var i = 0; i < frames.length; i++) {
@@ -513,8 +847,15 @@ PoseDefinition bilateralPoseFor(BilateralFrameSequence seq, double elapsedSecond
 /// [MusicManager]'s doc). Tests override this provider with a
 /// [SilentSpeaker]-backed controller so assertions can inspect exactly
 /// what would have been spoken.
-final routinePlayerControllerProvider = StateNotifierProvider<RoutinePlayerController, RoutinePlayerState?>((ref) {
-  final controller = RoutinePlayerController(VoiceCoach(FlutterTtsSpeaker()), MusicManager());
-  ref.onDispose(controller.endSession);
-  return controller;
-});
+final routinePlayerControllerProvider =
+    StateNotifierProvider<RoutinePlayerController, RoutinePlayerState?>((ref) {
+      final controller = RoutinePlayerController(
+        VoiceCoach(FlutterTtsSpeaker()),
+        MusicManager(),
+        ref.watch(workoutSignalLogProvider.notifier),
+        ref.watch(learningEventControllerProvider.notifier),
+        ref.read(reactiveEventProcessorProvider),
+      );
+      ref.onDispose(controller.endSession);
+      return controller;
+    });

@@ -1,0 +1,55 @@
+{
+  "routine_local_id": "PSW03",
+  "title": "Streamline Side Bend",
+  "women_only": true,
+  "side_mode": "BOTH_SIDES",
+  "frame_count": 6,
+  "preferred_asset_folder": "app_frames_400x600",
+  "opposite_side_asset_folder": null,
+  "completion_rule": "complete_every_required_side_before_advance",
+  "source_strip": "source_sequence.png",
+  "frames": [
+    {
+      "index": 1,
+      "role": "START",
+      "filename": "PSW03_F_01_START.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 2,
+      "role": "STREAMLINE",
+      "filename": "PSW03_F_02_STREAMLINE.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 3,
+      "role": "BEND_LEFT",
+      "filename": "PSW03_F_03_BEND_LEFT.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 4,
+      "role": "CENTER",
+      "filename": "PSW03_F_04_CENTER.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 5,
+      "role": "BEND_RIGHT",
+      "filename": "PSW03_F_05_BEND_RIGHT.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    },
+    {
+      "index": 6,
+      "role": "RETURN",
+      "filename": "PSW03_F_06_RETURN.png",
+      "native_size": "318x796",
+      "app_size": "400x600"
+    }
+  ]
+}

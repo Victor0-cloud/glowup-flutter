@@ -1,0 +1,31 @@
+{
+  "exerciseId": "EX062",
+  "exerciseName": "Knee-to-Chest",
+  "slug": "knee_to_chest",
+  "category": "Bedtime",
+  "secondaryCategory": "Mobility",
+  "level": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "format": "PNG",
+  "width": 277,
+  "height": 265,
+  "frameCount": 6,
+  "playbackType": "SIDE_SEQUENCE",
+  "loop": false,
+  "loopOrder": [
+    "EX062_F_01_START.png",
+    "EX062_F_02_RIGHT_KNEE_LIFT.png",
+    "EX062_F_03_RIGHT_HOLD.png",
+    "EX062_F_04_CENTER_RESET.png",
+    "EX062_F_05_LEFT_KNEE_LIFT.png",
+    "EX062_F_06_LEFT_HOLD.png"
+  ],
+  "defaultDurationSeconds": 40,
+  "sideDurationSeconds": 20,
+  "thumbnail": "EX062_F_03_RIGHT_HOLD.png",
+  "equipment": [],
+  "posture": "lying_supine",
+  "safetyCue": "Keep the head, shoulders and pelvis relaxed. Draw the knee in only as far as comfortable and avoid pulling directly on the kneecap.",
+  "implementationPath": "assets/glow_up/exercises/knee_to_chest/female/v2/"
+}

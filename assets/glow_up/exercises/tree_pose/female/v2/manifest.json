@@ -1,0 +1,25 @@
+{
+  "exerciseId": "EX059",
+  "exerciseName": "Tree Pose",
+  "slug": "tree_pose",
+  "category": "Flexibility",
+  "level": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "format": "PNG",
+  "width": 277,
+  "height": 265,
+  "frameCount": 6,
+  "loopOrder": [
+    "EX059_F_01_START.png",
+    "EX059_F_02_WEIGHT_SHIFT.png",
+    "EX059_F_03_KNEE_LIFT.png",
+    "EX059_F_04_FOOT_PLACE.png",
+    "EX059_F_05_HOLD.png",
+    "EX059_F_06_RESET.png"
+  ],
+  "holdSecondsRecommended": 20,
+  "sides": "Repeat on both sides",
+  "safetyCue": "Place the raised foot above or below the standing knee, never directly on the knee joint.",
+  "implementationPath": "assets/glow_up/exercises/tree_pose/female/v2/"
+}

@@ -1,0 +1,30 @@
+{
+  "exerciseId": "EX061",
+  "exerciseName": "Full Body Stretch",
+  "slug": "full_body_stretch",
+  "category": "Bedtime",
+  "secondaryCategory": "Flexibility",
+  "level": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "format": "PNG",
+  "width": 277,
+  "height": 265,
+  "frameCount": 6,
+  "playbackType": "SEQUENCE_LOOP",
+  "loop": true,
+  "loopOrder": [
+    "EX061_F_01_LIE_BACK.png",
+    "EX061_F_02_EXTEND_LEGS.png",
+    "EX061_F_03_REACH_OVERHEAD.png",
+    "EX061_F_04_FULL_STRETCH_HOLD.png",
+    "EX061_F_05_RELEASE.png",
+    "EX061_F_06_RESET.png"
+  ],
+  "defaultDurationSeconds": 45,
+  "thumbnail": "EX061_F_04_FULL_STRETCH_HOLD.png",
+  "equipment": [],
+  "posture": "lying_supine",
+  "safetyCue": "Lengthen gently without forcing the lower back to arch. Bend the knees if the back feels uncomfortable.",
+  "implementationPath": "assets/glow_up/exercises/full_body_stretch/female/v2/"
+}

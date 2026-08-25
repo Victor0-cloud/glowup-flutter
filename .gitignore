@@ -1,0 +1,77 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Local Supabase dev config — contains the real anon key, never commit.
+# config/dev.example.json (placeholders only) stays tracked.
+config/dev.local.json
+
+# Environment / credential files — never commit. .env.example (a
+# placeholder template, no real values) stays tracked.
+.env
+.env.*
+!.env.example
+
+# Credential / API-key reference notes — real secrets belong in a private
+# local folder outside version control, never in this repo. Exact
+# filenames previously found untracked in assets/glow_up/design_reference/
+# (moved to C:\Private\glow_up_credentials_backup\ — see git history audit
+# in the security cleanup that added this block) plus general patterns so
+# this can't recur under a similar name.
+GlowUp anon code.txt
+AI_COACH_API.txt
+COACH_API_KEY.txt
+client Id and secret id for Glowup.txt
+*_credentials_backup/
+*credential_notes*
+*api_key_notes*
+*API_KEY*.txt
+*_api_key*.txt
+
+# Google OAuth client-secret JSON downloads from Google Cloud Console
+# (named client_secret_<id>.apps.googleusercontent.com.json by default) —
+# distinct from google-services.json/GoogleService-Info.plist, which are
+# legitimate tracked platform config and are NOT covered by this rule.
+client_secret*.json

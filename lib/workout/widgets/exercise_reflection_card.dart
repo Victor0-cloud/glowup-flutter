@@ -25,19 +25,24 @@ class ReflectionConfig {
 /// Approved reflection prompts, keyed by Tier 1 catalog id.
 const Map<String, ReflectionConfig> kExerciseReflectionConfigs = {
   'EX066': ReflectionConfig(
-    prompt: 'How did Legs Up Wall feel? Note hamstring tension, back comfort, tingling or dizziness.',
+    prompt:
+        'How did Legs Up Wall feel? Note hamstring tension, back comfort, tingling or dizziness.',
     signals: [
       ReflectionSignal('hamstring_tension', 'Hamstring tension'),
       ReflectionSignal('lower_back_comfort', 'Lower-back comfort'),
       ReflectionSignal('tingling', 'Tingling'),
       ReflectionSignal('numbness', 'Numbness'),
       ReflectionSignal('dizziness', 'Dizziness'),
-      ReflectionSignal('wall_distance_modification', 'Wall-distance modification'),
+      ReflectionSignal(
+        'wall_distance_modification',
+        'Wall-distance modification',
+      ),
       ReflectionSignal('knee_bend_modification', 'Knee-bend modification'),
     ],
   ),
   'EX067': ReflectionConfig(
-    prompt: 'How did Reclined Butterfly feel? Note hip, groin, knee or lower-back comfort and whether you needed support.',
+    prompt:
+        'How did Reclined Butterfly feel? Note hip, groin, knee or lower-back comfort and whether you needed support.',
     signals: [
       ReflectionSignal('hip_comfort', 'Hip comfort'),
       ReflectionSignal('groin_comfort', 'Groin comfort'),
@@ -45,6 +50,33 @@ const Map<String, ReflectionConfig> kExerciseReflectionConfigs = {
       ReflectionSignal('lower_back_comfort', 'Lower-back comfort'),
       ReflectionSignal('support_used', 'Support used'),
       ReflectionSignal('range_of_motion', 'Range of motion'),
+    ],
+  ),
+  'EX068': ReflectionConfig(
+    prompt:
+        'How did Neck Release feel? Note any side-to-side difference, stiffness, pain, dizziness, tingling or limited range.',
+    signals: [
+      ReflectionSignal('right_neck_comfort', 'Right-side neck comfort'),
+      ReflectionSignal('left_neck_comfort', 'Left-side neck comfort'),
+      ReflectionSignal('side_difference', 'Side-to-side difference'),
+      ReflectionSignal('stiffness', 'Stiffness'),
+      ReflectionSignal('pain', 'Pain'),
+      ReflectionSignal('dizziness', 'Dizziness'),
+      ReflectionSignal('tingling', 'Tingling'),
+      ReflectionSignal('range_of_motion', 'Range of motion'),
+    ],
+  ),
+  'EX069': ReflectionConfig(
+    prompt:
+        'How did Box Breathing feel? Note whether the four-count holds were comfortable and whether you felt calm, dizzy, anxious or short of breath.',
+    signals: [
+      ReflectionSignal('hold_comfort', 'Four-count holds comfortable'),
+      ReflectionSignal('breath_comfort', 'Breathing comfort'),
+      ReflectionSignal('calmness', 'Felt calm'),
+      ReflectionSignal('dizziness', 'Dizziness'),
+      ReflectionSignal('anxiety', 'Anxiety'),
+      ReflectionSignal('shortness_of_breath', 'Shortness of breath'),
+      ReflectionSignal('preferred_count', 'Would prefer a different count'),
     ],
   ),
 };
@@ -60,7 +92,11 @@ const Map<String, ReflectionConfig> kExerciseReflectionConfigs = {
 /// period — it must survive the once-a-second rest-timer rebuild but
 /// never needs to be read anywhere else.
 class ExerciseReflectionCard extends StatefulWidget {
-  const ExerciseReflectionCard({super.key, required this.config, required this.onSave});
+  const ExerciseReflectionCard({
+    super.key,
+    required this.config,
+    required this.onSave,
+  });
 
   final ReflectionConfig config;
   final ValueChanged<String> onSave;
@@ -92,7 +128,9 @@ class _ExerciseReflectionCardState extends State<ExerciseReflectionCard> {
   }
 
   void _save() {
-    final labels = widget.config.signals.where((s) => _selected.contains(s.key)).map((s) => s.label);
+    final labels = widget.config.signals
+        .where((s) => _selected.contains(s.key))
+        .map((s) => s.label);
     final freeText = _noteController.text.trim();
     final parts = [...labels, if (freeText.isNotEmpty) freeText];
     if (parts.isEmpty) return;
@@ -108,22 +146,38 @@ class _ExerciseReflectionCardState extends State<ExerciseReflectionCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.cardStart, AppColors.cardEnd]),
+        gradient: const LinearGradient(
+          colors: [AppColors.cardStart, AppColors.cardEnd],
+        ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('AI COACH', style: AppTextStyles.captionBold.copyWith(color: AppColors.gold, fontSize: 12)),
+          Text(
+            'AI COACH',
+            style: AppTextStyles.captionBold.copyWith(
+              color: AppColors.gold,
+              fontSize: 12,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(widget.config.prompt, style: AppTextStyles.subtitle.copyWith(fontSize: 14)),
+          Text(
+            widget.config.prompt,
+            style: AppTextStyles.subtitle.copyWith(fontSize: 14),
+          ),
           const SizedBox(height: 14),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final signal in widget.config.signals) _SignalChip(label: signal.label, selected: _selected.contains(signal.key), onTap: _saved ? null : () => _toggle(signal.key)),
+              for (final signal in widget.config.signals)
+                _SignalChip(
+                  label: signal.label,
+                  selected: _selected.contains(signal.key),
+                  onTap: _saved ? null : () => _toggle(signal.key),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -132,25 +186,46 @@ class _ExerciseReflectionCardState extends State<ExerciseReflectionCard> {
             enabled: !_saved,
             minLines: 1,
             maxLines: 3,
-            style: AppTextStyles.subtitle.copyWith(fontSize: 13, color: Colors.white),
+            style: AppTextStyles.subtitle.copyWith(
+              fontSize: 13,
+              color: Colors.white,
+            ),
             decoration: InputDecoration(
               hintText: 'Add a note (optional)',
               hintStyle: AppTextStyles.caption.copyWith(fontSize: 13),
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.05),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
             ),
           ),
           const SizedBox(height: 14),
           if (_saved)
-            Text('Note saved', style: AppTextStyles.captionBold.copyWith(color: AppColors.success, fontSize: 13))
+            Text(
+              'Note saved',
+              style: AppTextStyles.captionBold.copyWith(
+                color: AppColors.success,
+                fontSize: 13,
+              ),
+            )
           else
             Row(
               children: [
                 TextButton(
                   onPressed: () => setState(() => _skipped = true),
-                  child: Text('Skip', style: AppTextStyles.captionBold.copyWith(color: AppColors.textSecondary, fontSize: 14)),
+                  child: Text(
+                    'Skip',
+                    style: AppTextStyles.captionBold.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
                 const Spacer(),
                 Material(
@@ -160,8 +235,18 @@ class _ExerciseReflectionCardState extends State<ExerciseReflectionCard> {
                     borderRadius: BorderRadius.circular(12),
                     onTap: _save,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      child: Text('Save Note', style: TextStyle(color: Color(0xFF0A0B1E), fontSize: 14, fontWeight: FontWeight.w800)),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      child: Text(
+                        'Save Note',
+                        style: TextStyle(
+                          color: Color(0xFF0A0B1E),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -174,7 +259,11 @@ class _ExerciseReflectionCardState extends State<ExerciseReflectionCard> {
 }
 
 class _SignalChip extends StatelessWidget {
-  const _SignalChip({required this.label, required this.selected, required this.onTap});
+  const _SignalChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   final String label;
   final bool selected;
@@ -183,7 +272,9 @@ class _SignalChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? AppColors.gold.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.05),
+      color: selected
+          ? AppColors.gold.withValues(alpha: 0.16)
+          : Colors.white.withValues(alpha: 0.05),
       borderRadius: BorderRadius.circular(100),
       child: InkWell(
         borderRadius: BorderRadius.circular(100),
@@ -192,14 +283,34 @@ class _SignalChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: selected ? AppColors.gold : AppColors.cardBorder),
+            border: Border.all(
+              color: selected ? AppColors.gold : AppColors.cardBorder,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(selected ? Icons.check_circle : Icons.circle_outlined, size: 14, color: selected ? AppColors.gold : AppColors.textSecondary),
+              Icon(
+                selected ? Icons.check_circle : Icons.circle_outlined,
+                size: 14,
+                color: selected ? AppColors.gold : AppColors.textSecondary,
+              ),
               const SizedBox(width: 6),
-              Text(label, style: AppTextStyles.caption.copyWith(fontSize: 12, color: selected ? AppColors.textPrimary : AppColors.textSecondary)),
+              // Flexible (not a bare Text) so a long label — e.g. "Would
+              // prefer a different count" — wraps within this chip's
+              // width instead of overflowing the Wrap on narrow screens.
+              Flexible(
+                child: Text(
+                  label,
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 12,
+                    color: selected
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

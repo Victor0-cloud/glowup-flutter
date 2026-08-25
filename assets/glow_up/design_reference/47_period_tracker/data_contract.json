@@ -1,0 +1,54 @@
+{
+  "cycleProfile": {
+    "trackingEnabled": "boolean",
+    "lastPeriodStart": "ISO-8601 date | null",
+    "typicalCycleDays": "integer 15..60 | null",
+    "typicalPeriodDays": "integer 1..15 | null",
+    "cycleAwareSuggestions": "boolean",
+    "remindersEnabled": "boolean",
+    "aiMemoryConsent": "boolean",
+    "updatedAt": "ISO-8601 timestamp"
+  },
+  "periodLog": {
+    "id": "uuid",
+    "date": "ISO-8601 date",
+    "flow": "spotting | light | medium | heavy",
+    "isStart": "boolean",
+    "isEnd": "boolean",
+    "note": "string | null",
+    "createdAt": "ISO-8601 timestamp"
+  },
+  "dailyCycleCheckIn": {
+    "id": "uuid",
+    "date": "ISO-8601 date",
+    "energy": "low | steady | high",
+    "mood": "low | calm | good | energized",
+    "symptoms": ["cramps", "bloating", "headache", "fatigue", "cravings", "back_ache", "tenderness", "none"],
+    "intensity": "integer 0..10",
+    "privateNote": "string | null"
+  },
+  "dailyWellnessRecord": {
+    "id": "uuid",
+    "date": "ISO-8601 date",
+    "feeling": "happy | sad | pain | menstrual_pain | null",
+    "emoji": "user-visible emoji token",
+    "privateNote": "string | null",
+    "aiMemoryConsent": "boolean",
+    "linkedPeriodLogId": "uuid | null",
+    "linkedWorkoutIds": ["uuid"],
+    "linkedFoodLogIds": ["uuid"],
+    "linkedWaterLogIds": ["uuid"],
+    "linkedSkinLogIds": ["uuid"],
+    "linkedJournalEntryIds": ["uuid"],
+    "attachmentTypes": ["workout", "food", "water", "skin", "cycle"],
+    "createdAt": "ISO-8601 timestamp",
+    "updatedAt": "ISO-8601 timestamp"
+  },
+  "prediction": {
+    "estimatedNextPeriodStart": "ISO-8601 date | null",
+    "estimatedCycleDay": "integer | null",
+    "confidence": "low | medium | high",
+    "generatedAt": "ISO-8601 timestamp",
+    "disclaimer": "Estimate only; not contraception, diagnosis, or medical advice."
+  }
+}

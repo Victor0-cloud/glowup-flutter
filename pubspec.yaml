@@ -40,10 +40,18 @@ dependencies:
   flutter_svg: ^2.3.0
   flutter_tts: ^4.2.5
   audioplayers: ^6.8.1
+  shared_preferences: ^2.5.5
+  image_picker: ^1.1.2
+  path_provider: ^2.1.5
+  supabase_flutter: ^2.8.0
+  app_links: ^7.2.1
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  path_provider_platform_interface: ^2.1.2
+  plugin_platform_interface: ^2.1.8
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -66,6 +74,8 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/glow_up/icons/
+    - assets/glow_up/auth/
+    - assets/glow_up/paywall/
     - assets/glow_up/illustrations/
     - assets/glow_up/illustrations/workout_ready/
     - assets/glow_up/mascot/
@@ -78,10 +88,14 @@ flutter:
     - assets/glow_up/exercises/plank/female/v2/
     - assets/glow_up/exercise_animations/lunges/female/left/
     - assets/glow_up/exercise_animations/lunges/female/right/
+    - assets/glow_up/exercises/lunges/female/v2/
     - assets/glow_up/exercises/squat/female/v1/
+    - assets/glow_up/exercises/squat/female/v2/
     - assets/glow_up/exercises/pushups/female/v1/
+    - assets/glow_up/exercises/pushups/female/v2/
     - assets/glow_up/exercises/deep_breathing/female/v1/
     - assets/glow_up/exercises/jumping_jack/female/v1/
+    - assets/glow_up/exercises/jumping_jack/female/v2/
     - assets/glow_up/exercises/glute_bridge/female/v1/
     - assets/glow_up/exercises/mountain_climbers/female/v1/
     - assets/glow_up/exercises/dead_bug/female/v2/
@@ -111,6 +125,7 @@ flutter:
     - assets/glow_up/exercises/tree_pose/female/v2/
     - assets/glow_up/exercises/savasana/female/v2/
     - assets/glow_up/exercises/deep_breathing/female/v2/
+    - assets/glow_up/exercises/full_body_stretch/female/v1/
     - assets/glow_up/exercises/full_body_stretch/female/v2/
     - assets/glow_up/exercises/knee_to_chest/female/v2/
     - assets/glow_up/exercises/supine_twist/female/v2/
@@ -118,6 +133,28 @@ flutter:
     - assets/glow_up/exercises/sit_up_reach/female/v2/
     - assets/glow_up/exercises/legs_up_wall/female/v2/
     - assets/glow_up/exercises/reclined_butterfly/female/v2/
+    - assets/glow_up/exercises/neck_release/female/v2/
+    - assets/glow_up/exercises/box_breathing/female/v2/
+    - assets/glow_up/exercises/shoulder_rolls/female/v2/
+    - assets/glow_up/exercises/arm_circles/female/v2/
+    - assets/glow_up/exercises/thoracic_rotation/female/v2/
+    - assets/glow_up/exercises/knee_circles/female/v2/
+    - assets/glow_up/exercises/wrist_circles/female/v2/
+    - assets/glow_up/exercises/hip_circles/female/v2/
+    - assets/glow_up/exercises/march_in_place/female/v2/
+    - assets/glow_up/exercises/high_knees/female/v2/
+    - assets/glow_up/exercises/butt_kicks/female/v2/
+    - assets/glow_up/exercises/step_jacks/female/v2/
+    - assets/glow_up/exercises/skaters/female/v2/
+    - assets/glow_up/exercises/shadow_boxing/female/v2/
+    - assets/glow_up/exercises/side_steps/female/v2/
+    - assets/glow_up/exercises/figure_four_stretch/female/v2/
+    - assets/glow_up/exercises/calf_stretch/female/v2/
+    - assets/glow_up/exercises/chest_opener/female/v2/
+    - assets/glow_up/exercises/90_90_hip_switch/female/v2/
+    - assets/glow_up/exercises/dryland_freestyle_reach/female/v2/
+    - assets/glow_up/exercises/streamline_side_bend/female/v2/
+    - assets/glow_up/exercises/triceps_lat_stretch/female/v2/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

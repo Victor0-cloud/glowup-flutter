@@ -50,7 +50,9 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
   void _tick() {
     final s = state;
     if (s == null || s.isPaused) return;
-    if (s.phase != WorkoutPhase.getReady && s.phase != WorkoutPhase.active && s.phase != WorkoutPhase.resting) {
+    if (s.phase != WorkoutPhase.getReady &&
+        s.phase != WorkoutPhase.active &&
+        s.phase != WorkoutPhase.resting) {
       return; // upNext/complete aren't timer-driven
     }
     if (s.remainingSeconds > 1) {
@@ -64,9 +66,15 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
     final s = state!;
     switch (s.phase) {
       case WorkoutPhase.getReady:
-        state = s.copyWith(phase: WorkoutPhase.active, remainingSeconds: s.currentExercise.durationSeconds);
+        state = s.copyWith(
+          phase: WorkoutPhase.active,
+          remainingSeconds: s.currentExercise.durationSeconds,
+        );
       case WorkoutPhase.active:
-        _finishCurrentExercise(skipped: false, elapsedSeconds: s.currentExercise.durationSeconds);
+        _finishCurrentExercise(
+          skipped: false,
+          elapsedSeconds: s.currentExercise.durationSeconds,
+        );
       case WorkoutPhase.resting:
         state = s.copyWith(phase: WorkoutPhase.upNext, remainingSeconds: 0);
       case WorkoutPhase.upNext:
@@ -75,17 +83,34 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
     }
   }
 
-  void _finishCurrentExercise({required bool skipped, required int elapsedSeconds}) {
+  void _finishCurrentExercise({
+    required bool skipped,
+    required int elapsedSeconds,
+  }) {
     final s = state!;
     final exercise = s.currentExercise;
     _elapsedOverride[exercise.id] = elapsedSeconds;
-    final elapsedMap = {...s.exerciseElapsedSeconds, exercise.id: elapsedSeconds};
-    final skippedSet = skipped ? {...s.skippedExerciseIds, exercise.id} : s.skippedExerciseIds;
-    _log.log(skipped ? WorkoutSignalType.exerciseSkipped : WorkoutSignalType.exerciseCompleted, detail: exercise.id);
+    final elapsedMap = {
+      ...s.exerciseElapsedSeconds,
+      exercise.id: elapsedSeconds,
+    };
+    final skippedSet = skipped
+        ? {...s.skippedExerciseIds, exercise.id}
+        : s.skippedExerciseIds;
+    _log.log(
+      skipped
+          ? WorkoutSignalType.exerciseSkipped
+          : WorkoutSignalType.exerciseCompleted,
+      detail: exercise.id,
+    );
 
     if (s.isLastExercise) {
       _log.log(WorkoutSignalType.workoutCompleted, detail: s.workout.id);
-      state = s.copyWith(phase: WorkoutPhase.complete, exerciseElapsedSeconds: elapsedMap, skippedExerciseIds: skippedSet);
+      state = s.copyWith(
+        phase: WorkoutPhase.complete,
+        exerciseElapsedSeconds: elapsedMap,
+        skippedExerciseIds: skippedSet,
+      );
       return;
     }
     state = s.copyWith(
@@ -102,7 +127,10 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
   void skipGetReady() {
     final s = state;
     if (s == null || s.phase != WorkoutPhase.getReady) return;
-    state = s.copyWith(phase: WorkoutPhase.active, remainingSeconds: s.currentExercise.durationSeconds);
+    state = s.copyWith(
+      phase: WorkoutPhase.active,
+      remainingSeconds: s.currentExercise.durationSeconds,
+    );
   }
 
   void togglePause() {
@@ -114,9 +142,14 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
   /// 32c's Prev chevron — restarts the previous exercise's timer.
   void previousExercise() {
     final s = state;
-    if (s == null || s.phase != WorkoutPhase.active || s.exerciseIndex == 0) return;
+    if (s == null || s.phase != WorkoutPhase.active || s.exerciseIndex == 0)
+      return;
     final newIndex = s.exerciseIndex - 1;
-    state = s.copyWith(exerciseIndex: newIndex, remainingSeconds: s.workout.exercises[newIndex].durationSeconds, isPaused: false);
+    state = s.copyWith(
+      exerciseIndex: newIndex,
+      remainingSeconds: s.workout.exercises[newIndex].durationSeconds,
+      isPaused: false,
+    );
   }
 
   /// 32c's Next chevron — moves on early without marking the exercise
@@ -147,7 +180,11 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
   void confirmReadyForNext() {
     final s = state;
     if (s == null || s.phase != WorkoutPhase.upNext) return;
-    state = s.copyWith(phase: WorkoutPhase.active, remainingSeconds: s.currentExercise.durationSeconds, isPaused: false);
+    state = s.copyWith(
+      phase: WorkoutPhase.active,
+      remainingSeconds: s.currentExercise.durationSeconds,
+      isPaused: false,
+    );
   }
 
   /// 32e's own "Skip Exercise" link — skips the previewed exercise before
@@ -159,10 +196,16 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
     final skippedSet = {...s.skippedExerciseIds, s.currentExercise.id};
     if (s.isLastExercise) {
       _log.log(WorkoutSignalType.workoutCompleted, detail: s.workout.id);
-      state = s.copyWith(phase: WorkoutPhase.complete, skippedExerciseIds: skippedSet);
+      state = s.copyWith(
+        phase: WorkoutPhase.complete,
+        skippedExerciseIds: skippedSet,
+      );
       return;
     }
-    state = s.copyWith(exerciseIndex: s.exerciseIndex + 1, skippedExerciseIds: skippedSet);
+    state = s.copyWith(
+      exerciseIndex: s.exerciseIndex + 1,
+      skippedExerciseIds: skippedSet,
+    );
   }
 
   /// Saves an optional post-exercise AI Coach reflection (see
@@ -174,7 +217,10 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
   /// affects whether that exercise counts as completed.
   void saveExerciseNote(String exerciseId, String summary) {
     _exerciseNotes[exerciseId] = summary;
-    _log.log(WorkoutSignalType.exerciseNoteSaved, detail: '$exerciseId: $summary');
+    _log.log(
+      WorkoutSignalType.exerciseNoteSaved,
+      detail: '$exerciseId: $summary',
+    );
   }
 
   WorkoutSessionResult? buildResult() {
@@ -190,7 +236,12 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
             note: _exerciseNotes[exercise.id],
           ),
     ];
-    return WorkoutSessionResult(workout: s.workout, startedAt: s.startedAt, finishedAt: DateTime.now(), exerciseResults: results);
+    return WorkoutSessionResult(
+      workout: s.workout,
+      startedAt: s.startedAt,
+      finishedAt: DateTime.now(),
+      exerciseResults: results,
+    );
   }
 
   void endSession() {
@@ -200,6 +251,11 @@ class WorkoutSessionController extends StateNotifier<WorkoutSessionState?> {
   }
 }
 
-final workoutSessionControllerProvider = StateNotifierProvider<WorkoutSessionController, WorkoutSessionState?>((ref) {
-  return WorkoutSessionController(ref.watch(workoutSignalLogProvider.notifier));
-});
+final workoutSessionControllerProvider =
+    StateNotifierProvider<WorkoutSessionController, WorkoutSessionState?>((
+      ref,
+    ) {
+      return WorkoutSessionController(
+        ref.watch(workoutSignalLogProvider.notifier),
+      );
+    });

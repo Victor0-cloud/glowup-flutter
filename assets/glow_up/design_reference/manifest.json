@@ -1,0 +1,44 @@
+{
+  "product": "Glow Up",
+  "module": "Paywall + Authentication",
+  "design_authority": "GPT/owner-approved visual reference",
+  "implementation_target": "C:\\Projects\\glow_up",
+  "time_of_day_variants": {
+    "morning": "gold/yellow",
+    "afternoon": "purple/lavender",
+    "evening": "pink/magenta",
+    "night": "blue/deep purple",
+    "implementation": "one shared screen structure driven by the existing time-of-day controller; do not duplicate pages"
+  },
+  "paywall_pages": [
+    "PW01_paywall_entry.png",
+    "PW02_choose_plan.png",
+    "PW03_premium_benefits.png",
+    "PW04_restore_terms.png",
+    "PW05_success.png",
+    "PW06_features_overview.png",
+    "PW07_plan_comparison.png"
+  ],
+  "auth_pages": [
+    "AU01_welcome.png",
+    "AU02_sign_in_method.png",
+    "AU03_email_sign_up.png",
+    "AU04_verify_email.png",
+    "AU05_profile_setup.png",
+    "AU06_auth_success.png"
+  ],
+  "auth_requirements": [
+    "Continue with Google",
+    "Email/password sign up",
+    "Email/password sign in",
+    "Email verification",
+    "Profile setup",
+    "Successful entry into Glow Up"
+  ],
+  "premium_direction": [
+    "Skin & Acne Scan is a Premium feature but remains testable during development",
+    "Use centralized entitlements",
+    "Do not fake billing or premium status"
+  ],
+  "pricing_note": "Pricing shown in the visual is design copy/example only unless the owner separately approves those exact prices."
+}

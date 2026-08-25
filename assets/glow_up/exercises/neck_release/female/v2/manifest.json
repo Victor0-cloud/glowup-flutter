@@ -1,0 +1,41 @@
+{
+  "exerciseId": "EX068",
+  "name": "Neck Release",
+  "slug": "neck_release",
+  "category": "Bedtime",
+  "routine": "Deep Sleep Prep",
+  "routineOrder": 3,
+  "difficulty": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "durationSeconds": 30,
+  "playbackType": "side_sequence",
+  "loop": false,
+  "equipment": [],
+  "position": "seated_cross_legged",
+  "imageSize": { "width": 277, "height": 265 },
+  "thumbnailFrame": "EX068_F_01_START.png",
+  "frames": [
+    { "order": 1, "file": "EX068_F_01_START.png", "label": "Start", "seconds": 3, "cue": "Sit tall with your shoulders relaxed and your gaze forward." },
+    { "order": 2, "file": "EX068_F_02_RIGHT_TILT.png", "label": "Right Tilt", "seconds": 4, "cue": "Slowly bring your right ear toward your right shoulder without lifting the shoulder." },
+    { "order": 3, "file": "EX068_F_03_RIGHT_HOLD.png", "label": "Right Hold", "seconds": 8, "cue": "Hold only within a comfortable range; keep both shoulders heavy." },
+    { "order": 4, "file": "EX068_F_04_CENTER_RESET.png", "label": "Center Reset", "seconds": 3, "cue": "Return your head slowly to center." },
+    { "order": 5, "file": "EX068_F_05_LEFT_TILT.png", "label": "Left Tilt", "seconds": 4, "cue": "Slowly bring your left ear toward your left shoulder without lifting the shoulder." },
+    { "order": 6, "file": "EX068_F_06_LEFT_HOLD.png", "label": "Left Hold", "seconds": 8, "cue": "Hold gently, then prepare to return to neutral when the timer ends." }
+  ],
+  "safety": [
+    "Keep the movement small, slow and pain-free.",
+    "Do not pull the head with either hand or force the stretch.",
+    "Stop for dizziness, tingling, numbness, sharp pain or pain traveling into an arm."
+  ],
+  "voiceAutomation": {
+    "mode": "phase_synced_cues",
+    "continuousBreathingPrompts": false,
+    "bedtimeTone": "soft"
+  },
+  "aiCoachNote": {
+    "enabled": true,
+    "prompt": "How did Neck Release feel? Note any side-to-side difference, stiffness, pain, dizziness, tingling or limited range.",
+    "trainingSignals": ["right_neck_comfort", "left_neck_comfort", "side_difference", "stiffness", "pain", "dizziness", "tingling", "range_of_motion"]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "exerciseId": "EX001",
+  "exerciseName": "Deep Breathing",
+  "slug": "deep_breathing",
+  "category": "Bedtime",
+  "level": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "format": "PNG",
+  "width": 277,
+  "height": 265,
+  "frameCount": 6,
+  "playbackType": "BREATHING",
+  "loop": true,
+  "loopOrder": [
+    "EX001_F_01_SETTLE.png",
+    "EX001_F_02_INHALE_BEGIN.png",
+    "EX001_F_03_INHALE_FULL.png",
+    "EX001_F_04_EXHALE_BEGIN.png",
+    "EX001_F_05_EXHALE_FULL.png",
+    "EX001_F_06_RESET.png"
+  ],
+  "defaultDurationSeconds": 60,
+  "breathCycleSeconds": 10,
+  "inhaleSeconds": 4,
+  "exhaleSeconds": 6,
+  "thumbnail": "EX001_F_01_SETTLE.png",
+  "equipment": [],
+  "safetyCue": "Breathe comfortably without forcing the breath. Stop if you feel dizzy or short of breath.",
+  "implementationPath": "assets/glow_up/exercises/deep_breathing/female/v2/"
+}

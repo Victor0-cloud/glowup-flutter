@@ -1,0 +1,28 @@
+{
+  "exerciseId": "EX060",
+  "exerciseName": "Savasana",
+  "alternateName": "Corpse Pose",
+  "slug": "savasana",
+  "category": "Recovery",
+  "level": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "format": "PNG",
+  "width": 277,
+  "height": 265,
+  "frameCount": 6,
+  "loop": false,
+  "loopOrder": [
+    "EX060_F_01_PREPARE.png",
+    "EX060_F_02_LOWER_TO_ELBOWS.png",
+    "EX060_F_03_LOWER_BACK.png",
+    "EX060_F_04_EXTEND_LEGS.png",
+    "EX060_F_05_HOLD.png",
+    "EX060_F_06_RECOVERY.png"
+  ],
+  "defaultDurationSeconds": 180,
+  "thumbnail": "EX060_F_05_HOLD.png",
+  "equipment": ["Yoga Mat"],
+  "safetyCue": "Keep the neck neutral. Bend the knees or place support beneath them if the lower back feels uncomfortable.",
+  "implementationPath": "assets/glow_up/exercises/savasana/female/v2/"
+}

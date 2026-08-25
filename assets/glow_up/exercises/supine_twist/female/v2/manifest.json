@@ -1,0 +1,39 @@
+{
+  "exerciseId": "EX063",
+  "name": "Supine Twist",
+  "slug": "supine_twist",
+  "category": "Bedtime",
+  "difficulty": "Beginner",
+  "gender": "female",
+  "version": "v2",
+  "durationSeconds": 40,
+  "playbackType": "side_sequence",
+  "loop": false,
+  "equipment": [],
+  "position": "supine",
+  "imageSize": { "width": 277, "height": 265 },
+  "thumbnailFrame": "EX063_F_03_RIGHT_TWIST_HOLD.png",
+  "frames": [
+    { "order": 1, "file": "EX063_F_01_START.png", "label": "Start", "seconds": 3, "cue": "Lie on your back, bend your knees, and open your arms." },
+    { "order": 2, "file": "EX063_F_02_KNEES_TOGETHER.png", "label": "Knees Together", "seconds": 3, "cue": "Bring your knees together and gently lift them." },
+    { "order": 3, "file": "EX063_F_03_RIGHT_TWIST_HOLD.png", "label": "Right Twist Hold", "seconds": 14, "cue": "Lower both knees to the right. Keep both shoulders grounded." },
+    { "order": 4, "file": "EX063_F_04_CENTER_RESET.png", "label": "Center Reset", "seconds": 3, "cue": "Return your knees slowly to center." },
+    { "order": 5, "file": "EX063_F_05_LEFT_TWIST.png", "label": "Left Twist", "seconds": 3, "cue": "Lower both knees gently to the left." },
+    { "order": 6, "file": "EX063_F_06_LEFT_TWIST_HOLD.png", "label": "Left Twist Hold", "seconds": 14, "cue": "Hold the left twist with both shoulders relaxed on the floor." }
+  ],
+  "safety": [
+    "Move only within a comfortable range and keep both shoulders grounded.",
+    "Place a pillow under the knees if they do not comfortably reach the floor.",
+    "Stop if the movement causes sharp back, hip, or knee pain."
+  ],
+  "voiceAutomation": {
+    "mode": "movement_cues_only",
+    "continuousBreathingPrompts": false,
+    "bedtimeTone": "soft"
+  },
+  "aiCoachNote": {
+    "enabled": true,
+    "prompt": "How did the Supine Twist feel? Note which side felt tighter and any back, hip, or knee discomfort.",
+    "trainingSignals": ["right_side_tightness", "left_side_tightness", "back_comfort", "hip_comfort", "knee_comfort", "used_pillow_modification"]
+  }
+}

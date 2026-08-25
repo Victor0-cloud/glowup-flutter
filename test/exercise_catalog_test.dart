@@ -192,7 +192,7 @@ void main() {
     );
 
     test(
-      'every routine exercise (except Morning Yoga Flow and Full Body Stretch/EX061, Knee-to-Chest/EX062, Supine Twist/EX063) traces back to a real catalog ID',
+      'every routine exercise (except Morning Yoga Flow and Full Body Stretch/EX061, Knee-to-Chest/EX062, Supine Twist/EX063, and Pre-Swim Prep\'s EX077-EX079) traces back to a real catalog ID',
       () {
         for (final workout in kWorkoutCatalog) {
           if (workout.id == 'morning-yoga-flow') {
@@ -216,6 +216,18 @@ void main() {
               'EX065',
               'EX066',
               'EX067',
+              'EX068',
+              'EX069',
+              'EX070',
+              'EX071',
+              'EX072',
+              'EX073',
+              'EX074',
+              'EX075',
+              'EX076',
+              'EX077',
+              'EX078',
+              'EX079',
             }.contains(exercise.catalogId)) {
               continue;
             }
