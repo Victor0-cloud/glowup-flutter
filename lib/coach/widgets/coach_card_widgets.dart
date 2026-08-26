@@ -3,6 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_icon.dart';
 import '../models/coach_models.dart';
+import '../theme/coach_identity.dart';
 
 /// One of the 3 "Chat / Plan / Mood" circles under the hub header
 /// (368:2305-2316). All three are real navigation targets.
@@ -114,8 +115,10 @@ class CoachTipCard extends StatelessWidget {
   }
 }
 
-/// A "Recent Chats" row (368:2327). Tapping any of them opens the single
-/// 23e chat thread — Figma defines no other destination for these.
+/// A real "Recent Chats" row (368:2327 layout, real data) — every
+/// conversation shown here is with the same AI Coach, so the avatar is
+/// always the real, centralized [CoachAvatar] identity, never a per-row
+/// emoji. Tapping opens the specific real thread this row summarizes.
 class ConversationItem extends StatelessWidget {
   const ConversationItem({super.key, required this.data, required this.onTap});
 
@@ -142,19 +145,7 @@ class ConversationItem extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.07),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  data.avatarEmoji,
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
+              const CoachAvatar(size: 40, emojiFallbackSize: 20),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

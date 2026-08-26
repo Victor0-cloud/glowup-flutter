@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:cross_file/cross_file.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../scan/config/scan_backend_config.dart';
@@ -73,9 +74,11 @@ String _hostForCategory(ProductCategory? category) => switch (category) {
 
 /// The real, deployed implementation. Barcode lookup calls the
 /// category-appropriate Open Food Facts-family API directly over HTTPS
-/// (`dart:io HttpClient`, no API key, no new package dependency). Label-
-/// photo analysis authenticates via Supabase anonymous sign-in (same
-/// pattern as `RemoteScanAnalysisProvider`) and calls `analyze-scan` with
+/// via `package:http` (no API key) — cross-platform, including Web, unlike
+/// `dart:io`'s `HttpClient` which has no Web implementation at all (see
+/// the Web safety audit that switched this from HttpClient). Label-photo
+/// analysis authenticates via Supabase anonymous sign-in (same pattern as
+/// `RemoteScanAnalysisProvider`) and calls `analyze-scan` with
 /// `kind: 'product'`.
 class RemoteProductDataProvider implements ProductDataProvider {
   RemoteProductDataProvider({SupabaseClient? client})
@@ -124,23 +127,22 @@ class RemoteProductDataProvider implements ProductDataProvider {
 
     final host = _hostForCategory(categoryHint);
     final uri = Uri.https(host, '/api/v2/product/$trimmed.json');
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
     try {
-      final request = await client.getUrl(uri);
-      request.headers.set(
-        HttpHeaders.userAgentHeader,
-        'GlowUp-App/1.0 (women\'s wellness app; contact via app store listing)',
-      );
-      final response = await request.close().timeout(
-        const Duration(seconds: 8),
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'User-Agent':
+                  'GlowUp-App/1.0 (women\'s wellness app; contact via app store listing)',
+            },
+          )
+          .timeout(const Duration(seconds: 8));
       if (response.statusCode != 200) {
         return response.statusCode == 404
             ? ProductLookupResult.notFound
             : ProductLookupResult.providerFailure;
       }
-      final body = await response.transform(utf8.decoder).join();
-      final json = jsonDecode(body);
+      final json = jsonDecode(response.body);
       if (json is! Map<String, dynamic>)
         return ProductLookupResult.providerFailure;
       final status = json['status'];
@@ -159,14 +161,19 @@ class RemoteProductDataProvider implements ProductDataProvider {
               status: ProductLookupStatus.found,
               product: product,
             );
-    } on SocketException {
-      return ProductLookupResult.offline;
     } on TimeoutException {
       return ProductLookupResult.offline;
-    } catch (_) {
+    } catch (e) {
+      // http throws various platform-specific connectivity exceptions
+      // (SocketException natively, ClientException/DOM errors on Web) —
+      // all genuinely mean "couldn't reach the network," never a crash.
+      final message = e.toString().toLowerCase();
+      if (message.contains('socket') ||
+          message.contains('network') ||
+          message.contains('failed to fetch')) {
+        return ProductLookupResult.offline;
+      }
       return ProductLookupResult.providerFailure;
-    } finally {
-      client.close(force: true);
     }
   }
 
@@ -250,9 +257,14 @@ class RemoteProductDataProvider implements ProductDataProvider {
     if (mimeType == null || !kAllowedScanMimeTypes.contains(mimeType))
       return ProductLookupResult.providerFailure;
 
-    final file = File(imagePath);
-    if (!await file.exists()) return ProductLookupResult.providerFailure;
-    final bytes = await file.readAsBytes();
+    // XFile reads bytes cross-platform, including Web (see the Web safety
+    // audit — dart:io's File has no meaning for a `blob:` URL there).
+    List<int> bytes;
+    try {
+      bytes = await XFile(imagePath).readAsBytes();
+    } catch (_) {
+      return ProductLookupResult.providerFailure;
+    }
     if (bytes.isEmpty || bytes.length > kMaxScanImageBytes)
       return ProductLookupResult.providerFailure;
 

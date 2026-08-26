@@ -31,6 +31,7 @@ class CoachPlanScreen extends ConsumerWidget {
     this.onWellnessCheckInTap,
     this.onCycleTap,
     this.onShopScanTap,
+    this.onWalkingTap,
   });
 
   final VoidCallback onBack;
@@ -66,6 +67,10 @@ class CoachPlanScreen extends ConsumerWidget {
   /// Same minimal-additive pattern as [onWellnessCheckInTap] — the real
   /// entry point into the Glow Shop Scanner.
   final VoidCallback? onShopScanTap;
+
+  /// Same minimal-additive pattern as [onWellnessCheckInTap] — the real
+  /// entry point into Walking & Steps.
+  final VoidCallback? onWalkingTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -165,6 +170,19 @@ class CoachPlanScreen extends ConsumerWidget {
                                       onPressed: onShopScanTap,
                                       child: Text(
                                         'Glow Shop Scanner',
+                                        style: AppTextStyles.captionBold
+                                            .copyWith(
+                                              color: CoachVariantConfig
+                                                  .navActiveColor,
+                                              fontSize: 13,
+                                            ),
+                                      ),
+                                    ),
+                                  if (onWalkingTap != null)
+                                    TextButton(
+                                      onPressed: onWalkingTap,
+                                      child: Text(
+                                        'Walking & Steps',
                                         style: AppTextStyles.captionBold
                                             .copyWith(
                                               color: CoachVariantConfig

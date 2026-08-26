@@ -116,9 +116,26 @@ class CoachBrainContext {
   /// only these named fields, never raw workout/journal/mood content or
   /// any field not already listed on this class. See
   /// `RemoteCoachBrainService` and `supabase/functions/coach-chat/`.
-  Map<String, dynamic> toRequestJson() => {
-    'greetingName': greetingName,
-    'period': period.name,
+  ///
+  /// `currentLocalDate`/`currentLocalDateTime`/`timezoneOffsetMinutes` are
+  /// computed fresh from `DateTime.now()` right here, inside this method —
+  /// deliberately NOT stored as constructor fields set once when the
+  /// provider last rebuilt. `coachBrainContextProvider` is a plain
+  /// (non-autoDispose, non-timer) Riverpod `Provider`: it only recomputes
+  /// when a *watched* dependency invalidates, so a `DateTime.now()` read
+  /// during `build()` could go stale if the chat screen sits open a while
+  /// before the user actually sends a message. Computing it here instead —
+  /// at the moment `toRequestJson()` is actually called for a real
+  /// request — guarantees the server always gets the true current moment
+  /// (see the Aug-27 date-bug fix this comment documents).
+  Map<String, dynamic> toRequestJson() {
+    final now = DateTime.now();
+    return {
+      'greetingName': greetingName,
+      'period': period.name,
+      'currentLocalDate': _isoLocalDate(now),
+      'currentLocalDateTime': _isoLocalDateTimeWithOffset(now),
+      'timezoneOffsetMinutes': now.timeZoneOffset.inMinutes,
     if (primaryGoal != null) 'primaryGoal': primaryGoal!.name,
     'routinesScheduledToday': routinesScheduledToday,
     'routinesCompletedToday': routinesCompletedToday,
@@ -141,8 +158,36 @@ class CoachBrainContext {
       'todayCycleEnergyLevel': todayCycleEnergyLevel,
     if (todayCyclePainIntensity != null)
       'todayCyclePainIntensity': todayCyclePainIntensity,
-    if (todayCycleSymptoms.isNotEmpty) 'todayCycleSymptoms': todayCycleSymptoms,
-  };
+      if (todayCycleSymptoms.isNotEmpty)
+        'todayCycleSymptoms': todayCycleSymptoms,
+    };
+  }
+
+  static String _isoLocalDate(DateTime dt) =>
+      '${dt.year.toString().padLeft(4, '0')}-'
+      '${dt.month.toString().padLeft(2, '0')}-'
+      '${dt.day.toString().padLeft(2, '0')}';
+
+  /// A real ISO-8601 datetime string WITH the local UTC offset (e.g.
+  /// `2026-08-26T07:34:00-04:00`) — `DateTime.now().toIso8601String()`
+  /// alone omits the offset entirely for a non-UTC DateTime, which is the
+  /// core of why the server previously had no way to know what "local"
+  /// even meant for this request.
+  static String _isoLocalDateTimeWithOffset(DateTime dt) {
+    final offset = dt.timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final absOffset = offset.abs();
+    final offsetHours = absOffset.inHours.toString().padLeft(2, '0');
+    final offsetMinutes = (absOffset.inMinutes % 60).toString().padLeft(
+      2,
+      '0',
+    );
+    final time =
+        '${dt.hour.toString().padLeft(2, '0')}:'
+        '${dt.minute.toString().padLeft(2, '0')}:'
+        '${dt.second.toString().padLeft(2, '0')}';
+    return '${_isoLocalDate(dt)}T$time$sign$offsetHours:$offsetMinutes';
+  }
 }
 
 /// How many most-recent completed workouts feed the Coach's short-term

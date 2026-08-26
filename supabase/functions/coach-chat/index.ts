@@ -157,7 +157,14 @@ const SYSTEM_PROMPT =
   `You are the Glow Up AI Coach — a supportive fitness/wellness companion for a women's ` +
   `wellness app. Be warm, encouraging, and practical. You may suggest workouts, routines, ` +
   `hydration/rest reminders, and general wellness habits grounded in the user's real context ` +
-  `provided below. NEVER diagnose a medical condition, prescribe medication or supplements, or ` +
+  `provided below. CRITICAL: you have NO reliable internal sense of the current date — never ` +
+  `guess it, never derive it from your own training data, never infer it from timestamps ` +
+  `mentioned earlier in this conversation. The "Current date/time" line included below on every ` +
+  `single message is the ONLY authoritative source for today's date, and it always reflects the ` +
+  `real device clock right now — trust it exactly, even if it contradicts something implied ` +
+  `earlier in this conversation. If asked "what is today's date," answer directly from that line, ` +
+  `nothing else. "Today"/"yesterday"/"tomorrow" always mean exactly that local date and the ` +
+  `calendar days immediately before/after it. NEVER diagnose a medical condition, prescribe medication or supplements, or ` +
   `claim to treat or cure anything. NEVER recommend extreme calorie restriction, fasting beyond ` +
   `routine intermittent-fasting norms, or purging. NEVER comment on attractiveness, beauty, or ` +
   `assign any appearance-based score. If the user reports pain or a recent pain flag is present ` +
@@ -166,7 +173,13 @@ const SYSTEM_PROMPT =
   `answer ONLY from the "Fitness activity from real Glow Up records" data provided below — ` +
   `NEVER invent, estimate, or assume a workout/exercise happened. If that data shows zero ` +
   `completed workouts or an empty list, say so honestly (e.g. "I don't see a completed workout ` +
-  `recorded yet") rather than claiming any activity occurred. You DO have access to the user's ` +
+  `recorded yet") rather than claiming any activity occurred. When asked about steps or walks ` +
+  `(e.g. "how many steps today," "what was my last walk," "did I reach my step goal"), answer ` +
+  `ONLY from the "Walking & Steps activity" data below — this is real phone-only step counting, ` +
+  `NEVER Fitbit or Apple Watch data unless a future integration explicitly adds that; if a field ` +
+  `there is null, say exactly what's missing (e.g. "I don't have a step count for today yet") ` +
+  `rather than guessing a number, and NEVER invent a distance, pace, or calorie figure the data ` +
+  `doesn't contain. You DO have access to the user's ` +
   `real Period & Cycle data and Journal activity summary when they are included below ("Live ` +
   `context right now" and "Journal activity") — when a field is present, use it directly and ` +
   `NEVER claim you don't have access to it or to "modules"/"personal data" in general; when a ` +
@@ -188,6 +201,95 @@ const SYSTEM_PROMPT =
   `have no access at all if a "Journal activity" summary (counts/mood) is present. Keep replies ` +
   `to 2-4 short sentences unless the user asks for more detail. Respond in plain text only, no ` +
   `markdown, no JSON.`;
+
+// ==================================================
+// Shared temporal-context policy (Aug-27 date-bug fix)
+// ==================================================
+// The Edge Function runs in UTC and has no idea what the user's local
+// calendar day is. Previously NOTHING told the model the current date at
+// all — it had to guess, and guessed wrong (reported "August 27" against
+// a real local date of August 26). Every Brain module that reasons about
+// "today"/"yesterday" must go through this one policy: the CLIENT is the
+// only thing that genuinely knows the device's local date/time/offset
+// (see `CoachBrainContext.toRequestJson` — computed fresh per request,
+// never cached/stale), so it sends `currentLocalDate` (`YYYY-MM-DD`),
+// `currentLocalDateTime` (ISO-8601 WITH UTC offset), and
+// `timezoneOffsetMinutes` on every single request. This module never
+// hardcodes a timezone, a date, or trusts server UTC as if it were the
+// user's "today."
+
+interface ClientTemporalContext {
+  currentLocalDate: string; // "YYYY-MM-DD"
+  currentLocalDateTime: string; // ISO-8601 with offset
+  timezoneOffsetMinutes: number;
+}
+
+function parseClientTemporalContext(
+  context: Record<string, unknown> | null,
+): ClientTemporalContext | null {
+  if (!context) return null;
+  const { currentLocalDate, currentLocalDateTime, timezoneOffsetMinutes } = context;
+  if (
+    typeof currentLocalDate === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(currentLocalDate) &&
+    typeof currentLocalDateTime === "string" &&
+    typeof timezoneOffsetMinutes === "number"
+  ) {
+    return { currentLocalDate, currentLocalDateTime, timezoneOffsetMinutes };
+  }
+  return null;
+}
+
+// Storage-vs-display rule: brain_events.occurred_at is stored as a real
+// UTC timestamptz and MUST stay that way — never rewritten to local time.
+// To answer "did this happen today," this computes the user's local
+// calendar day's [start, end) boundaries and converts THOSE to UTC, then
+// callers compare stored UTC timestamps against these UTC boundaries —
+// never the reverse (never converting stored UTC into a naive local
+// string and string-comparing dates, which is what silently breaks near
+// midnight in any timezone that isn't UTC).
+function localDayBoundsUtc(
+  temporal: ClientTemporalContext,
+): { startUtcMs: number; endUtcMs: number } {
+  const [year, month, day] = temporal.currentLocalDate.split("-").map(Number);
+  // Date.UTC(y, m-1, d, 0,0,0) is local midnight IF it were UTC — subtract
+  // the offset (which is local-minus-UTC, same convention as JS/Dart's
+  // own getTimezoneOffset-adjacent semantics) to get the real UTC instant
+  // of local midnight. Example: local date 2026-08-26, offset -240 (EDT,
+  // UTC-4) -> Date.UTC(...) = 2026-08-26T00:00:00Z, minus (-240*60000) =
+  // plus 4 hours = 2026-08-26T04:00:00Z, which IS local midnight EDT.
+  const naiveMidnightUtcMs = Date.UTC(year, month - 1, day, 0, 0, 0);
+  const startUtcMs = naiveMidnightUtcMs - temporal.timezoneOffsetMinutes * 60 * 1000;
+  const endUtcMs = startUtcMs + 24 * 60 * 60 * 1000;
+  return { startUtcMs, endUtcMs };
+}
+
+// The one place the model is told what "today" actually is — placed as
+// its own prominent prompt line (not buried inside the general "Live
+// context" line) since this is the single highest-priority fact for any
+// date-related question. Falls back to an honestly-labeled server UTC
+// date only when the client genuinely sent nothing (e.g. context missing
+// entirely) — never silently presents a guessed date as if it were local.
+function buildTemporalContextLine(context: Record<string, unknown> | null): string {
+  const temporal = parseClientTemporalContext(context);
+  if (temporal) {
+    return (
+      `Current date/time (authoritative — this is real device data, never guess or use a ` +
+      `different date, and never let earlier messages in this conversation override it): ` +
+      `today's local date is ${temporal.currentLocalDate}, local time is ` +
+      `${temporal.currentLocalDateTime}, timezone offset from UTC is ` +
+      `${temporal.timezoneOffsetMinutes} minutes. "Today" always means ${temporal.currentLocalDate}; ` +
+      `"yesterday" and "tomorrow" are always exactly one calendar day before/after that.`
+    );
+  }
+  const fallbackUtc = new Date().toISOString().slice(0, 10);
+  return (
+    `Current date/time: the app did not report the user's local date for this request, so this ` +
+    `is the SERVER's UTC date (${fallbackUtc}) — it may be a day off from the user's real local ` +
+    `date. If asked what today's date is, say you're not fully certain of their local date right ` +
+    `now rather than stating ${fallbackUtc} as a confirmed fact.`
+  );
+}
 
 function contextToPromptLine(context: Record<string, unknown> | null): string {
   if (!context) return "";
@@ -263,7 +365,17 @@ const MAX_RECENT_EXERCISE_NAMES = 8;
 // nothing here is inferred or fabricated, and an empty/missing history
 // produces an honest "no completed workouts yet" statement rather than
 // silence (which the model could otherwise fill in with a guess).
-function buildFitnessContext(events: BrainEventRow[]): string {
+//
+// `temporal` (nullable — see `parseClientTemporalContext`) drives
+// `workouts_today`/`today_workout_names`: real local-day boundaries
+// converted to UTC (`localDayBoundsUtc`), compared against the stored UTC
+// `occurred_at` — never the model inferring "today" by eyeballing a raw
+// timestamp string, which is what previously made "did I work out today"
+// unreliable even once the date itself was known.
+function buildFitnessContext(
+  events: BrainEventRow[],
+  temporal: ClientTemporalContext | null,
+): string {
   const workoutEvents = events.filter(
     (e) => e.source === "workout" && e.event_type === "workoutCompleted",
   );
@@ -283,6 +395,20 @@ function buildFitnessContext(events: BrainEventRow[]): string {
   const workoutsLast7Days = workoutEvents.filter(
     (e) => new Date(e.occurred_at).getTime() >= cutoff,
   ).length;
+
+  let workoutsToday: number | null = null;
+  let todayWorkoutNames: string[] | null = null;
+  if (temporal) {
+    const { startUtcMs, endUtcMs } = localDayBoundsUtc(temporal);
+    const todaysEvents = workoutEvents.filter((e) => {
+      const t = new Date(e.occurred_at).getTime();
+      return t >= startUtcMs && t < endUtcMs;
+    });
+    workoutsToday = todaysEvents.length;
+    todayWorkoutNames = todaysEvents
+      .map((e) => (typeof e.data?.workoutName === "string" ? (e.data.workoutName as string) : null))
+      .filter((n): n is string => n !== null);
+  }
 
   const latest = workoutEvents[0]; // events are already ordered most-recent-first
   const latestWorkoutName =
@@ -313,7 +439,7 @@ function buildFitnessContext(events: BrainEventRow[]): string {
     }
   }
 
-  const fitness = {
+  const fitness: Record<string, unknown> = {
     workouts_last_7_days: workoutsLast7Days,
     total_completed_workouts_on_file: workoutEvents.length,
     latest_workout: latestWorkoutName,
@@ -321,12 +447,116 @@ function buildFitnessContext(events: BrainEventRow[]): string {
     recent_exercises: recentExerciseNames,
     most_used_category: mostUsedCategory,
   };
+  // Only included when the client actually reported a local date — see
+  // parseClientTemporalContext. Absent (not `null`/`0`) rather than a
+  // fabricated count when the client's temporal context is missing.
+  if (temporal) {
+    fitness.workouts_today = workoutsToday;
+    fitness.today_workout_names = todayWorkoutNames;
+  }
 
   return (
     "Fitness activity from real Glow Up records (JSON; every field here is " +
-    "an actual persisted record, never invented — if a field is null or an " +
-    "array is empty, say so honestly rather than guessing): " +
+    "an actual persisted record, computed against the authoritative current " +
+    "local date above — never invented, never eyeballed from a raw " +
+    "timestamp — if a field is null or an array is empty, say so honestly " +
+    "rather than guessing): " +
     JSON.stringify(fitness)
+  );
+}
+
+const RECENT_WALKS_WINDOW_DAYS = 7;
+
+// Standalone Walking & Steps (phone-only, never Fitbit/Apple Watch). Same
+// discipline as buildFitnessContext: reuses the shared temporal policy —
+// never a second, ad hoc "today" calculation — for steps_today and
+// last_walk. Never one Brain event per step; this reads the bounded
+// dailyStepsSnapshot/walkCompleted/stepGoalReached events only.
+function buildWalkingContext(
+  events: BrainEventRow[],
+  temporal: ClientTemporalContext | null,
+): string {
+  const walkEvents = events.filter(
+    (e) => e.source === "walking" && e.event_type === "walkCompleted",
+  );
+  const snapshotEvents = events.filter(
+    (e) => e.source === "walking" && e.event_type === "dailyStepsSnapshot",
+  );
+  const goalReachedEvents = events.filter(
+    (e) => e.source === "walking" && e.event_type === "stepGoalReached",
+  );
+
+  if (walkEvents.length === 0 && snapshotEvents.length === 0) {
+    return (
+      "Walking & Steps activity from real Glow Up records: no steps or walks are on file yet " +
+      "for this user (phone-only feature — never requires Fitbit or Apple Watch). Never claim a " +
+      "step count or walk happened unless it appears here."
+    );
+  }
+
+  const walking: Record<string, unknown> = {
+    total_walks_on_file: walkEvents.length,
+  };
+
+  if (temporal) {
+    const { startUtcMs, endUtcMs } = localDayBoundsUtc(temporal);
+    // Most recent dailyStepsSnapshot that actually falls within today's
+    // real local-day boundary — never a stale prior-day snapshot passed
+    // off as "today."
+    const todaySnapshot = snapshotEvents.find((e) => {
+      const t = new Date(e.occurred_at).getTime();
+      return t >= startUtcMs && t < endUtcMs;
+    });
+    walking.steps_today =
+      todaySnapshot && typeof todaySnapshot.data?.steps === "number"
+        ? (todaySnapshot.data.steps as number)
+        : null;
+    walking.step_goal =
+      todaySnapshot && typeof todaySnapshot.data?.goal === "number"
+        ? (todaySnapshot.data.goal as number)
+        : null;
+    walking.goal_reached_today = goalReachedEvents.some((e) => {
+      const t = new Date(e.occurred_at).getTime();
+      return t >= startUtcMs && t < endUtcMs;
+    });
+
+    const weekCutoffMs = endUtcMs - RECENT_WALKS_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    const walksThisWeek = walkEvents.filter(
+      (e) => new Date(e.occurred_at).getTime() >= weekCutoffMs,
+    );
+    walking.walks_last_7_days = walksThisWeek.length;
+    walking.steps_from_walks_last_7_days = walksThisWeek.reduce((sum, e) => {
+      const steps = typeof e.data?.steps === "number" ? (e.data.steps as number) : 0;
+      return sum + steps;
+    }, 0);
+  }
+
+  const latestWalk = walkEvents[0]; // already ordered most-recent-first
+  if (latestWalk) {
+    walking.last_walk = {
+      completed_at: latestWalk.occurred_at,
+      duration_seconds: typeof latestWalk.data?.durationSeconds === "number"
+        ? latestWalk.data.durationSeconds
+        : null,
+      steps: typeof latestWalk.data?.steps === "number" ? latestWalk.data.steps : null,
+      distance_meters: typeof latestWalk.data?.distanceMeters === "number"
+        ? latestWalk.data.distanceMeters
+        : null,
+      average_pace_seconds_per_km:
+        typeof latestWalk.data?.averagePaceSecondsPerKm === "number"
+          ? latestWalk.data.averagePaceSecondsPerKm
+          : null,
+    };
+  } else {
+    walking.last_walk = null;
+  }
+
+  return (
+    "Walking & Steps activity from real Glow Up records (JSON; phone-only step counting, never " +
+    "Fitbit/Apple Watch data unless a future health-connection integration says otherwise — every " +
+    "field here is an actual persisted record computed against the authoritative current local " +
+    "date above; a null field means that data genuinely isn't available, never a guess): " +
+    JSON.stringify(walking)
   );
 }
 
@@ -847,11 +1077,17 @@ Deno.serve(async (req) => {
   }
 
   // 11. Build the system prompt server-side from all of the above.
+  // buildTemporalContextLine comes right after SYSTEM_PROMPT itself —
+  // maximum salience for the single highest-priority fact in any
+  // date-related answer (see the shared temporal-context policy above).
+  const clientTemporal = parseClientTemporalContext(requestBody.context);
   const systemPrompt = [
     SYSTEM_PROMPT,
+    buildTemporalContextLine(requestBody.context),
     contextToPromptLine(requestBody.context),
     memoryToPromptLine((memoryRows ?? []) as MemoryFact[]),
-    buildFitnessContext((eventRows ?? []) as BrainEventRow[]),
+    buildFitnessContext((eventRows ?? []) as BrainEventRow[], clientTemporal),
+    buildWalkingContext((eventRows ?? []) as BrainEventRow[], clientTemporal),
     buildJournalContext((journalRows ?? []) as JournalRow[]),
     journalSignalsLine,
   ]

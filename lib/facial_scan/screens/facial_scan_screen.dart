@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,9 +9,19 @@ import '../../core/widgets/sub_screen_header.dart';
 import '../../scan/models/scan_analysis_models.dart';
 import '../../scan/providers/image_acquisition_provider.dart';
 import '../../scan/providers/scan_analysis_provider.dart';
+import '../../scan/widgets/camera_permission_help.dart';
+import '../../scan/widgets/scan_image_preview.dart';
 import '../state/facial_scan_controller.dart';
 
-enum _Step { consent, permission, preview, analyzing, checkIn, confirm }
+enum _Step {
+  consent,
+  permission,
+  preview,
+  analyzing,
+  analysisFailed,
+  checkIn,
+  confirm,
+}
 
 const kFacialWellnessAreas = [
   'Breakouts',
@@ -51,6 +59,7 @@ class _FacialScanScreenState extends ConsumerState<FacialScanScreen> {
   String? _imagePath;
   String? _error;
   bool _busy = false;
+  bool _permissionDenied = false;
   final Set<String> _selectedAreas = {};
   final _noteController = TextEditingController();
   ScanProviderCapability _analysisState = ScanProviderCapability.unavailable;
@@ -80,23 +89,37 @@ class _FacialScanScreenState extends ConsumerState<FacialScanScreen> {
   /// Observations are shown to the user as *information* alongside the
   /// self-reported check-in chips below — the confirmed, saved data is
   /// always the user's own selection (see `FacialScanController.
-  /// confirmCheckIn`), never the raw model output. Falls back honestly
-  /// when unavailable or on any failure — never a fabricated observation.
+  /// confirmCheckIn`), never the raw model output. Three honest outcomes,
+  /// same discipline as Food Scan: not-configured falls through quietly to
+  /// the manual check-in, a genuine call failure offers an explicit Retry,
+  /// success shows real observations. `_busy` guards against a rapid
+  /// double-tap on "Continue" firing this twice.
   Future<void> _runAnalysis() async {
     final path = _imagePath;
     if (path == null) {
       setState(() => _stepOverride = _Step.checkIn);
       return;
     }
-    setState(() => _stepOverride = _Step.analyzing);
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _stepOverride = _Step.analyzing;
+    });
     final result = await _analysis.analyzeFacial(path);
     if (!mounted) return;
+    final providerWasAvailable =
+        _analysisState == ScanProviderCapability.available;
     setState(() {
+      _busy = false;
       if (result != null) {
         _observations = result.observations;
         _qualityNote = result.qualityNote;
+        _stepOverride = _Step.checkIn;
+      } else if (providerWasAvailable) {
+        _stepOverride = _Step.analysisFailed;
+      } else {
+        _stepOverride = _Step.checkIn;
       }
-      _stepOverride = _Step.checkIn;
     });
   }
 
@@ -104,32 +127,54 @@ class _FacialScanScreenState extends ConsumerState<FacialScanScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _permissionDenied = false;
     });
-    final path = await _acquisition.captureFromCamera();
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      if (path != null) {
-        _imagePath = path;
-        _stepOverride = _Step.preview;
-      }
-    });
+    try {
+      final path = await _acquisition.captureFromCamera(
+        preferFrontCamera: true,
+      );
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        if (path != null) {
+          _imagePath = path;
+          _stepOverride = _Step.preview;
+        }
+      });
+    } on CameraPermissionDeniedException {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _permissionDenied = true;
+        _error = cameraPermissionDeniedMessage;
+      });
+    }
   }
 
   Future<void> _pickFromGallery() async {
     setState(() {
       _busy = true;
       _error = null;
+      _permissionDenied = false;
     });
-    final path = await _acquisition.pickFromGallery();
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      if (path != null) {
-        _imagePath = path;
-        _stepOverride = _Step.preview;
-      }
-    });
+    try {
+      final path = await _acquisition.pickFromGallery();
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        if (path != null) {
+          _imagePath = path;
+          _stepOverride = _Step.preview;
+        }
+      });
+    } on CameraPermissionDeniedException {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _permissionDenied = true;
+        _error = cameraPermissionDeniedMessage;
+      });
+    }
   }
 
   void _removeImage() {
@@ -232,9 +277,37 @@ class _FacialScanScreenState extends ConsumerState<FacialScanScreen> {
       _Step.permission => _permissionStep(),
       _Step.preview => _previewStep(),
       _Step.analyzing => _analyzingStep(),
+      _Step.analysisFailed => _analysisFailedStep(),
       _Step.checkIn => _checkInStep(),
       _Step.confirm => _confirmStep(),
     };
+  }
+
+  Widget _analysisFailedStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GlowCard(
+          child: Text(
+            "Couldn't analyze that photo right now. This is usually a "
+            'temporary connection issue — you can try again, or continue '
+            'with a manual check-in.',
+            style: AppTextStyles.subtitle.copyWith(fontSize: 14),
+          ),
+        ),
+        const SizedBox(height: 20),
+        _PrimaryButton(
+          label: 'Retry',
+          onTap: _busy ? null : _runAnalysis,
+          loading: _busy,
+        ),
+        const SizedBox(height: 12),
+        _SecondaryButton(
+          label: 'Continue Without Analysis',
+          onTap: () => setState(() => _stepOverride = _Step.checkIn),
+        ),
+      ],
+    );
   }
 
   Widget _analyzingStep() {
@@ -307,11 +380,19 @@ class _FacialScanScreenState extends ConsumerState<FacialScanScreen> {
         GlowCard(
           child: Text(
             _acquisition.supportsCameraCapture
-                ? 'Glow Up can use your camera to take a photo, or you can choose an existing one. The photo stays private on this device.'
+                ? 'Glow Up can use your front camera to take a photo, or you can choose an existing one. The photo stays private on this device.'
                 : 'Live camera capture is unavailable on this device. Choose a photo instead.',
             style: AppTextStyles.subtitle.copyWith(fontSize: 14),
           ),
         ),
+        if (_acquisition.supportsCameraCapture) ...[
+          const SizedBox(height: 10),
+          Text(
+            'For the clearest photo: face a light source, center your face '
+            'in the frame, and hold still before capturing.',
+            style: AppTextStyles.caption.copyWith(fontSize: 12),
+          ),
+        ],
         if (_error != null) ...[
           const SizedBox(height: 10),
           Text(
@@ -321,6 +402,10 @@ class _FacialScanScreenState extends ConsumerState<FacialScanScreen> {
               fontSize: 13,
             ),
           ),
+          if (_permissionDenied && supportsOpenAppSettingsDeepLink) ...[
+            const SizedBox(height: 8),
+            _SecondaryButton(label: 'Open Settings', onTap: openAppSettings),
+          ],
         ],
         const SizedBox(height: 20),
         if (_acquisition.supportsCameraCapture) ...[
@@ -332,7 +417,9 @@ class _FacialScanScreenState extends ConsumerState<FacialScanScreen> {
           const SizedBox(height: 12),
         ],
         _SecondaryButton(
-          label: 'Choose Photo',
+          label: _acquisition.supportsCameraCapture
+              ? 'Choose from gallery'
+              : 'Choose Photo',
           onTap: _busy ? null : _pickFromGallery,
         ),
         const SizedBox(height: 12),
@@ -358,18 +445,10 @@ class _FacialScanScreenState extends ConsumerState<FacialScanScreen> {
         if (path != null)
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: AspectRatio(
-              aspectRatio: 4 / 3,
-              child: File(path).existsSync()
-                  ? Image.file(File(path), fit: BoxFit.cover)
-                  : Container(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Image not found',
-                        style: AppTextStyles.subtitle,
-                      ),
-                    ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 280,
+              child: ScanImagePreview(path: path, fit: BoxFit.contain),
             ),
           ),
         const SizedBox(height: 16),

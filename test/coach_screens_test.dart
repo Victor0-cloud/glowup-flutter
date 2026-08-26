@@ -73,6 +73,7 @@ void main() {
           container,
           CoachHubScreen(
             onChat: () => chatTapped = true,
+            onOpenThread: (_) {},
             onPlan: () => planTapped = true,
             onMood: () => moodTapped = true,
             onSettings: () => settingsTapped = true,
@@ -117,6 +118,7 @@ void main() {
           container,
           CoachHubScreen(
             onChat: () {},
+            onOpenThread: (_) {},
             onPlan: () {},
             onMood: () {},
             onSettings: () {},
@@ -228,6 +230,62 @@ void main() {
       await tester.pump();
       expect(backTapped, isTrue);
     });
+
+    testWidgets(
+      '1. microphone button renders beside the input, and 2. the text '
+      'field remains fully usable alongside it',
+      (tester) async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        await _pumpAtMobileSize(
+          tester,
+          container,
+          CoachChatScreen(
+            onBack: () {},
+            onToday: () {},
+            onRoutines: () {},
+            onProfile: () {},
+          ),
+        );
+
+        expect(find.bySemanticsLabel('Start voice input'), findsOneWidget);
+        expect(find.bySemanticsLabel('Send'), findsOneWidget);
+
+        await tester.enterText(find.byType(TextField), 'typed without voice');
+        await tester.pump();
+        final field = tester.widget<TextField>(find.byType(TextField));
+        expect(field.controller!.text, 'typed without voice');
+      },
+    );
+
+    testWidgets(
+      '13. tapping the mic on a platform/test-VM with no real speech '
+      'channel degrades honestly — never crashes the Chat screen',
+      (tester) async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        await _pumpAtMobileSize(
+          tester,
+          container,
+          CoachChatScreen(
+            onBack: () {},
+            onToday: () {},
+            onRoutines: () {},
+            onProfile: () {},
+          ),
+        );
+
+        await tester.tap(find.bySemanticsLabel('Start voice input'));
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+
+        // The real requirement (Section 13, "unsupported platform does not
+        // crash"): no exception, regardless of which honest terminal state
+        // (unavailable/permissionDenied/error) the real engine lands on in
+        // this platform-channel-less test environment.
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 
   group('Coach Plan (23f)', () {

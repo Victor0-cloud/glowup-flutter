@@ -31,6 +31,7 @@ String _remoteSourceFor(EventModule module) => switch (module) {
   EventModule.connectedHealth => 'connected_health',
   EventModule.cycle => 'period_cycle',
   EventModule.shop => 'product_scan',
+  EventModule.walking => 'walking',
 };
 
 /// Tier 0 only: durable, idempotent ingestion. `ingest()` does exactly one

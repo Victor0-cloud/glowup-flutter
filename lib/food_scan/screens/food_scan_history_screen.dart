@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +6,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/sub_screen_header.dart';
+import '../../scan/widgets/scan_image_preview.dart';
 import '../models/food_scan_models.dart';
 import '../state/food_scan_controller.dart';
 
@@ -104,18 +103,12 @@ class _HistoryBody extends ConsumerWidget {
               if (entry.imagePath != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: File(entry.imagePath!).existsSync()
-                      ? Image.file(
-                          File(entry.imagePath!),
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(
-                          width: 48,
-                          height: 48,
-                          color: Colors.white.withValues(alpha: 0.05),
-                        ),
+                  child: ScanImagePreview(
+                    path: entry.imagePath!,
+                    width: 48,
+                    height: 48,
+                    showNotFoundLabel: false,
+                  ),
                 ),
               if (entry.imagePath != null) const SizedBox(width: 12),
               Expanded(

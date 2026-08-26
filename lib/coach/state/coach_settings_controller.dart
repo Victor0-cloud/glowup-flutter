@@ -15,6 +15,12 @@ class CoachSettingsController extends StateNotifier<CoachSettingsState> {
       state = state.copyWith(personality: p);
   void setFrequency(NotificationFrequency f) =>
       state = state.copyWith(frequency: f);
+  void setVoicePreference(CoachVoicePreference v) =>
+      state = state.copyWith(voicePreference: v);
+  void setSpeechSpeed(CoachSpeechSpeed s) =>
+      state = state.copyWith(speechSpeed: s);
+  void setAutoReadReplies(bool v) =>
+      state = state.copyWith(autoReadReplies: v);
 }
 
 final coachSettingsControllerProvider =

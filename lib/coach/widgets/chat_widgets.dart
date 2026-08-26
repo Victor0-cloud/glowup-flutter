@@ -3,6 +3,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_icon.dart';
 import '../models/coach_models.dart';
+import '../state/coach_voice_input_controller.dart' show CoachListenStatus;
+import '../theme/coach_identity.dart';
 
 /// Assistant/restored-historical timestamps arrive as UTC (Supabase
 /// `timestamptz` — see `RemoteCoachBrainService`/`CoachThreadRepository`),
@@ -10,7 +12,7 @@ import '../models/coach_models.dart';
 /// (already local). Formatting must always go through `.toLocal()` first
 /// so every bubble reads in the device's local time regardless of origin
 /// — the stored UTC value itself is never altered, only this display.
-String _timeLabel(DateTime t) {
+String formatCoachMessageTime(DateTime t) {
   final local = t.toLocal();
   final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
   final minute = local.minute.toString().padLeft(2, '0');
@@ -22,13 +24,30 @@ String _timeLabel(DateTime t) {
 /// render as a centered plain caption with no avatar/bubble chrome, so
 /// they read unmistakably as app copy rather than a fabricated AI reply.
 class ChatBubbleRow extends StatelessWidget {
-  const ChatBubbleRow({super.key, required this.message, this.onFeedback});
+  const ChatBubbleRow({
+    super.key,
+    required this.message,
+    this.onFeedback,
+    this.onSpeak,
+    this.isSpeaking = false,
+  });
 
   final ChatMessage message;
 
   /// Non-null only for real assistant messages — see
   /// `CoachChatScreen`. Never shown on user/system bubbles.
   final ValueChanged<int>? onFeedback;
+
+  /// Toggles read-aloud for this specific message (Section 2 of the
+  /// female-voice requirement): tapping while idle starts speech (stopping
+  /// any other message currently speaking first — only one plays at a
+  /// time); tapping again while [isSpeaking] is true stops it. Non-null
+  /// only for real assistant messages, same as [onFeedback].
+  final VoidCallback? onSpeak;
+
+  /// True only for the one message (if any) currently being read aloud —
+  /// drives the speaker icon's visual "playing/stop" state.
+  final bool isSpeaking;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +94,7 @@ class ChatBubbleRow extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            _timeLabel(message.sentAt),
+            formatCoachMessageTime(message.sentAt),
             textAlign: TextAlign.right,
             style: TextStyle(
               color: Colors.white.withValues(alpha: isUser ? 0.5 : 0.6),
@@ -92,25 +111,21 @@ class ChatBubbleRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: const BoxDecoration(
-            color: Color(0xFF181436),
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: const Text('🤖', style: TextStyle(fontSize: 14)),
-        ),
+        const CoachAvatar(size: 28, emojiFallbackSize: 14),
         const SizedBox(width: 8),
         Flexible(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               bubble,
-              if (onFeedback != null) ...[
+              if (onFeedback != null || onSpeak != null) ...[
                 const SizedBox(height: 4),
-                _FeedbackRow(rating: message.feedback, onFeedback: onFeedback!),
+                _MessageActionRow(
+                  rating: message.feedback,
+                  onFeedback: onFeedback,
+                  onSpeak: onSpeak,
+                  isSpeaking: isSpeaking,
+                ),
               ],
             ],
           ),
@@ -120,15 +135,24 @@ class ChatBubbleRow extends StatelessWidget {
   }
 }
 
-/// Thumbs-up/thumbs-down for a real assistant message — writes to
-/// `coach_feedback` (see `CoachChatController.sendFeedback`). [rating]
-/// reflects what's actually persisted (or optimistically in flight);
-/// never shown on a message that isn't a real, persisted assistant reply.
-class _FeedbackRow extends StatelessWidget {
-  const _FeedbackRow({required this.rating, required this.onFeedback});
+/// Speaker (read-aloud) + thumbs-up/thumbs-down for a real assistant
+/// message. Feedback writes to `coach_feedback` (see
+/// `CoachChatController.sendFeedback`); [rating] reflects what's actually
+/// persisted (or optimistically in flight). Speaking reads the message
+/// through the female AI Coach voice (see `CoachVoiceSpeaker`). Neither is
+/// ever shown on a message that isn't a real, persisted assistant reply.
+class _MessageActionRow extends StatelessWidget {
+  const _MessageActionRow({
+    required this.rating,
+    required this.onFeedback,
+    required this.onSpeak,
+    required this.isSpeaking,
+  });
 
   final int? rating;
-  final ValueChanged<int> onFeedback;
+  final ValueChanged<int>? onFeedback;
+  final VoidCallback? onSpeak;
+  final bool isSpeaking;
 
   @override
   Widget build(BuildContext context) {
@@ -137,17 +161,42 @@ class _FeedbackRow extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _FeedbackButton(
-            icon: Icons.thumb_up_outlined,
-            selected: rating == 1,
-            onTap: () => onFeedback(1),
-          ),
-          const SizedBox(width: 4),
-          _FeedbackButton(
-            icon: Icons.thumb_down_outlined,
-            selected: rating == -1,
-            onTap: () => onFeedback(-1),
-          ),
+          if (onSpeak != null) ...[
+            Semantics(
+              button: true,
+              label: isSpeaking ? 'Stop reading this reply' : 'Read this reply aloud',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: onSpeak,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    isSpeaking
+                        ? Icons.stop_circle_outlined
+                        : Icons.volume_up_outlined,
+                    size: 14,
+                    color: isSpeaking
+                        ? AppColors.gold
+                        : Colors.white.withValues(alpha: 0.4),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+          if (onFeedback != null) ...[
+            _FeedbackButton(
+              icon: Icons.thumb_up_outlined,
+              selected: rating == 1,
+              onTap: () => onFeedback!(1),
+            ),
+            const SizedBox(width: 4),
+            _FeedbackButton(
+              icon: Icons.thumb_down_outlined,
+              selected: rating == -1,
+              onTap: () => onFeedback!(-1),
+            ),
+          ],
         ],
       ),
     );
@@ -236,6 +285,8 @@ class ChatInputField extends StatelessWidget {
     super.key,
     required this.controller,
     required this.onSend,
+    this.micStatus = CoachListenStatus.idle,
+    this.onMicTap,
   });
 
   final TextEditingController controller;
@@ -244,6 +295,19 @@ class ChatInputField extends StatelessWidget {
   /// the send button while the same request is in-flight." Disables both
   /// the send button and Enter-to-send.
   final VoidCallback? onSend;
+
+  /// Drives the microphone icon's visual state. Always rendered — even on
+  /// a platform where voice input turns out to be unavailable, per the
+  /// voice-input requirement's "Show microphone disabled/unavailable...
+  /// do not fake it" instruction (hiding the control entirely would be
+  /// less honest than showing it disabled).
+  final CoachListenStatus micStatus;
+
+  /// Null only while a send/retry is in flight (same guard as [onSend]) —
+  /// tapping toggles listening on/off; the controller behind this decides
+  /// what to do with an unavailable/denied engine (see
+  /// `CoachVoiceInputController`).
+  final VoidCallback? onMicTap;
 
   @override
   Widget build(BuildContext context) {
@@ -265,14 +329,21 @@ class ChatInputField extends StatelessWidget {
               onSubmitted: enabled ? (_) => onSend!() : null,
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'Ask me anything...',
+                hintText: micStatus == CoachListenStatus.listening
+                    ? 'Listening...'
+                    : 'Ask me anything...',
                 hintStyle: AppTextStyles.subtitle.copyWith(fontSize: 14),
                 border: InputBorder.none,
                 isCollapsed: true,
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
+          _MicButton(
+            status: micStatus,
+            onTap: enabled ? onMicTap : null,
+          ),
+          const SizedBox(width: 4),
           Opacity(
             opacity: enabled ? 1 : 0.5,
             child: Semantics(
@@ -294,6 +365,63 @@ class ChatInputField extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Microphone / voice-input button (Section 1 of the voice-input
+/// requirement) — idle/listening/processing/unavailable/permissionDenied/
+/// error all render honestly distinct states, never a silently-broken
+/// control. Accessibility labels match the requirement's own examples
+/// ("Start voice input" / "Stop listening").
+class _MicButton extends StatelessWidget {
+  const _MicButton({required this.status, required this.onTap});
+
+  final CoachListenStatus status;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final listening = status == CoachListenStatus.listening;
+    final disabledLook =
+        status == CoachListenStatus.unavailable ||
+        status == CoachListenStatus.permissionDenied ||
+        status == CoachListenStatus.error;
+    final icon = switch (status) {
+      CoachListenStatus.listening => Icons.mic,
+      CoachListenStatus.processing => Icons.mic,
+      CoachListenStatus.unavailable => Icons.mic_off_outlined,
+      CoachListenStatus.permissionDenied => Icons.mic_off_outlined,
+      CoachListenStatus.error => Icons.mic_off_outlined,
+      CoachListenStatus.idle => Icons.mic_none,
+    };
+    final color = listening
+        ? AppColors.gold
+        : disabledLook
+        ? Colors.white.withValues(alpha: 0.3)
+        : Colors.white.withValues(alpha: 0.6);
+
+    return Opacity(
+      opacity: onTap == null ? 0.5 : 1,
+      child: Semantics(
+        button: true,
+        label: listening ? 'Stop listening' : 'Start voice input',
+        child: Material(
+          color: listening
+              ? AppColors.gold.withValues(alpha: 0.15)
+              : Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: Center(child: Icon(icon, size: 18, color: color)),
+            ),
+          ),
+        ),
       ),
     );
   }

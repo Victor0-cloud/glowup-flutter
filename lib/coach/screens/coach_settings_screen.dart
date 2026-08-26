@@ -121,6 +121,47 @@ class CoachSettingsScreen extends ConsumerWidget {
                             selected: settings.frequency,
                             onSelected: controller.setFrequency,
                           ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'AI COACH VOICE',
+                            style: AppTextStyles.captionBold.copyWith(
+                              color: const Color(0xFFB0B5E3),
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SegmentedOptionRow<CoachVoicePreference>(
+                            options: CoachVoicePreference.values,
+                            labels: [
+                              for (final v in CoachVoicePreference.values)
+                                v.label,
+                            ],
+                            selected: settings.voicePreference,
+                            onSelected: controller.setVoicePreference,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'SPEECH SPEED',
+                            style: AppTextStyles.captionBold.copyWith(
+                              color: const Color(0xFFB0B5E3),
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SegmentedOptionRow<CoachSpeechSpeed>(
+                            options: CoachSpeechSpeed.values,
+                            labels: [
+                              for (final s in CoachSpeechSpeed.values) s.label,
+                            ],
+                            selected: settings.speechSpeed,
+                            onSelected: controller.setSpeechSpeed,
+                          ),
+                          const SizedBox(height: 16),
+                          ToggleRow(
+                            label: 'Auto-read replies',
+                            value: settings.autoReadReplies,
+                            onChanged: controller.setAutoReadReplies,
+                          ),
                         ],
                       ),
                     ),

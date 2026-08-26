@@ -1,7 +1,22 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:image_picker/image_picker.dart';
+
+/// Thrown by [ImageAcquisitionProvider.captureFromCamera]/[pickFromGallery]
+/// specifically when the OS reports the camera/photo permission was
+/// denied (image_picker's own `camera_access_denied`/`photo_access_denied`
+/// PlatformException codes — real, cross-platform signals from the OS, not
+/// a guess) — kept distinct from a plain `null` return (the user simply
+/// cancelled, not an error) so the UI can show an honest "permission
+/// needed" explanation instead of silently doing nothing. Whether this was
+/// a first-time denial or a permanent one is not distinguishable from this
+/// signal alone (image_picker reports the same code either way); the UI
+/// offers Retry either way and an OS Settings deep-link where supported.
+class CameraPermissionDeniedException implements Exception {
+  const CameraPermissionDeniedException();
+}
 
 /// How image acquisition is currently available on this device/build —
 /// the UI reads this and shows the correct experience rather than
@@ -35,8 +50,11 @@ abstract class ImageAcquisitionProvider {
 
   /// Returns a local file path, or null if the user cancelled. Never
   /// called when [supportsCameraCapture] is false — callers must check
-  /// first.
-  Future<String?> captureFromCamera();
+  /// first. [preferFrontCamera] is a hint only (e.g. Skin Scan positioning
+  /// a face) — the OS/device may not honor it (no front camera present,
+  /// user manually flips it in the native camera UI), which is fine: this
+  /// never blocks capture over a camera-facing preference.
+  Future<String?> captureFromCamera({bool preferFrontCamera = false});
 
   /// Gallery picker on Android/iOS/web; a native file picker on desktop
   /// (Windows/macOS/Linux) via the same `image_picker` call — this is the
@@ -76,12 +94,27 @@ class ImagePickerAcquisitionProvider implements ImageAcquisitionProvider {
     return ScanCapability.available;
   }
 
+  static const _permissionDeniedCodes = {
+    'camera_access_denied',
+    'photo_access_denied',
+  };
+
   @override
-  Future<String?> captureFromCamera() async {
+  Future<String?> captureFromCamera({bool preferFrontCamera = false}) async {
     if (!supportsCameraCapture) return null;
     try {
-      final file = await _picker.pickImage(source: ImageSource.camera);
+      final file = await _picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: preferFrontCamera
+            ? CameraDevice.front
+            : CameraDevice.rear,
+      );
       return file?.path;
+    } on PlatformException catch (e) {
+      if (_permissionDeniedCodes.contains(e.code)) {
+        throw const CameraPermissionDeniedException();
+      }
+      return null;
     } catch (_) {
       return null;
     }
@@ -92,6 +125,11 @@ class ImagePickerAcquisitionProvider implements ImageAcquisitionProvider {
     try {
       final file = await _picker.pickImage(source: ImageSource.gallery);
       return file?.path;
+    } on PlatformException catch (e) {
+      if (_permissionDeniedCodes.contains(e.code)) {
+        throw const CameraPermissionDeniedException();
+      }
+      return null;
     } catch (_) {
       return null;
     }

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,6 +7,7 @@ import '../../core/widgets/glow_card.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/sub_screen_header.dart';
 import '../../scan/providers/image_acquisition_provider.dart';
+import '../../scan/widgets/scan_image_preview.dart';
 import '../models/shop_models.dart';
 import '../state/shop_controller.dart';
 import '../utils/currency_formatter.dart';
@@ -311,15 +310,11 @@ class _ListItemCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(10),
               child: SizedBox(
                 height: 90,
-                child: File(item.receiptImagePath!).existsSync()
-                    ? Image.file(
-                        File(item.receiptImagePath!),
-                        fit: BoxFit.cover,
-                      )
-                    : Text(
-                        'Receipt image not found',
-                        style: AppTextStyles.caption,
-                      ),
+                width: double.infinity,
+                child: ScanImagePreview(
+                  path: item.receiptImagePath!,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ],

@@ -8,7 +8,10 @@ import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/bottom_nav_bar.dart';
 import '../../core/widgets/gradient_background.dart';
 import '../models/coach_models.dart';
+import '../state/coach_chat_controller.dart';
+import '../theme/coach_identity.dart';
 import '../theme/coach_variant_config.dart';
+import '../widgets/chat_widgets.dart' show formatCoachMessageTime;
 import '../widgets/coach_card_widgets.dart';
 import '../widgets/coach_hub_widgets.dart';
 
@@ -23,6 +26,7 @@ class CoachHubScreen extends ConsumerWidget {
   const CoachHubScreen({
     super.key,
     required this.onChat,
+    required this.onOpenThread,
     required this.onPlan,
     required this.onMood,
     required this.onSettings,
@@ -32,6 +36,11 @@ class CoachHubScreen extends ConsumerWidget {
   });
 
   final VoidCallback onChat;
+
+  /// Opens a specific real, persisted thread — used by a real "Recent
+  /// Chats" row (Section 5 of the stale-hub remediation), distinct from
+  /// [onChat]'s "start/continue the current conversation" quick action.
+  final ValueChanged<String> onOpenThread;
   final VoidCallback onPlan;
   final VoidCallback onMood;
   final VoidCallback onSettings;
@@ -44,7 +53,7 @@ class CoachHubScreen extends ConsumerWidget {
     final period = ref.watch(currentTodPeriodProvider);
     final copy = kCoachHubCopy[period]!;
     final variant = CoachVariantConfig.byPeriod[period]!;
-    final recentChats = kCoachRecentChats[period]!;
+    final recentThreadsAsync = ref.watch(coachRecentThreadsProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -125,27 +134,7 @@ class CoachHubScreen extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      AppColors.cardStart,
-                                      AppColors.cardEnd,
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: AppColors.cardBorder,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: const Text(
-                                  '🤖',
-                                  style: TextStyle(fontSize: 24),
-                                ),
-                              ),
+                              const CoachAvatar(size: 48),
                             ],
                           ),
                         ),
@@ -200,14 +189,65 @@ class CoachHubScreen extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              for (var i = 0; i < recentChats.length; i++) ...[
-                                ConversationItem(
-                                  data: recentChats[i],
-                                  onTap: onChat,
+                              recentThreadsAsync.when(
+                                loading: () => const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.gold,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                if (i != recentChats.length - 1)
-                                  const SizedBox(height: 12),
-                              ],
+                                error: (err, st) => Text(
+                                  "Couldn't load your recent conversations.",
+                                  style: AppTextStyles.subtitle.copyWith(
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                data: (threads) {
+                                  if (threads.isEmpty) {
+                                    return Text(
+                                      'No conversations yet — tap Chat to start one.',
+                                      style: AppTextStyles.subtitle.copyWith(
+                                        fontSize: 13,
+                                      ),
+                                    );
+                                  }
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      for (
+                                        var i = 0;
+                                        i < threads.length;
+                                        i++
+                                      ) ...[
+                                        ConversationItem(
+                                          data: ConversationPreview(
+                                            threadId: threads[i].threadId,
+                                            title: threads[i].title,
+                                            preview:
+                                                threads[i].lastMessagePreview,
+                                            timeLabel: formatCoachMessageTime(
+                                              threads[i].lastMessageAt,
+                                            ),
+                                          ),
+                                          onTap: () => onOpenThread(
+                                            threads[i].threadId,
+                                          ),
+                                        ),
+                                        if (i != threads.length - 1)
+                                          const SizedBox(height: 12),
+                                      ],
+                                    ],
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         ),

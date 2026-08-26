@@ -88,6 +88,9 @@ import '../routines/screens/routine_detail_screen.dart';
 import '../routines/screens/routines_hub_screen.dart';
 import '../routines/state/routines_controller.dart';
 import '../today/screens/today_screen.dart';
+import '../walking/models/walking_models.dart';
+import '../walking/screens/walk_session_screen.dart';
+import '../walking/screens/walking_home_screen.dart';
 import '../water/screens/water_history_screen.dart';
 import '../water/screens/water_tracker_screen.dart';
 import '../workout/data/exercise_catalog.dart';
@@ -147,6 +150,8 @@ class AppRoutes {
   static const routinePlayerQa = '/dev/routine-player-qa';
   static const water = '/water';
   static const waterHistory = '/water/history';
+  static const walking = '/walking';
+  static const walkSession = '/walking/session';
   static const foodScan = '/food-scan';
   static const foodScanHistory = '/food-scan/history';
   static const facialScan = '/facial-scan';
@@ -562,6 +567,21 @@ final GoRouter appRouter = GoRouter(
           WaterHistoryScreen(onBack: () => context.pop()),
     ),
     GoRoute(
+      path: AppRoutes.walking,
+      builder: (context, state) => WalkingHomeScreen(
+        onBack: () => context.pop(),
+        onStartWalk: (routine) =>
+            context.push(AppRoutes.walkSession, extra: routine),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.walkSession,
+      builder: (context, state) => WalkSessionScreen(
+        routine: state.extra as WalkRoutine?,
+        onDone: () => context.pop(),
+      ),
+    ),
+    GoRoute(
       path: AppRoutes.foodScan,
       builder: (context, state) => FoodScanScreen(
         onBack: () => context.pop(),
@@ -693,6 +713,8 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.coach,
       builder: (context, state) => CoachHubScreen(
         onChat: () => context.push(AppRoutes.coachChat),
+        onOpenThread: (threadId) =>
+            context.push(AppRoutes.coachChat, extra: threadId),
         onPlan: () => context.push(AppRoutes.coachPlan),
         onMood: () => context.push(AppRoutes.coachMoodHistory),
         onSettings: () => context.push(AppRoutes.coachSettings),
@@ -708,6 +730,7 @@ final GoRouter appRouter = GoRouter(
         onToday: () => context.go(AppRoutes.today),
         onRoutines: () => context.push(AppRoutes.routines),
         onProfile: () => context.push(AppRoutes.profile),
+        initialThreadId: state.extra as String?,
       ),
     ),
     GoRoute(
@@ -733,6 +756,7 @@ final GoRouter appRouter = GoRouter(
           ),
           onCycleTap: () => context.push(AppRoutes.cycle),
           onShopScanTap: () => context.push(AppRoutes.shopScan),
+          onWalkingTap: () => context.push(AppRoutes.walking),
         ),
       ),
     ),

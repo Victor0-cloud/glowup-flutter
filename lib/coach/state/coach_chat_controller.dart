@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../brain/coach_brain_context.dart';
 import '../brain/coach_brain_service.dart';
@@ -5,6 +7,9 @@ import '../config/coach_backend_config.dart';
 import '../data/coach_feedback_repository.dart';
 import '../data/coach_thread_repository.dart';
 import '../models/coach_models.dart';
+import '../voice/coach_voice_speaker.dart';
+import 'coach_settings_controller.dart';
+import 'coach_voice_input_controller.dart';
 
 /// Truthful, user-visible connection states (Section H) — never displays
 /// the legacy "AI Brain not connected yet" copy once a backend is
@@ -111,8 +116,9 @@ class CoachChatController extends StateNotifier<CoachChatState> {
     this._brain,
     this._contextRead,
     this._threadRepository,
-    this._feedbackRepository,
-  ) : super(
+    this._feedbackRepository, [
+    this._onAssistantReply,
+  ]) : super(
         CoachBackendConfig.isConfigured
             ? const CoachChatState(
                 messages: [],
@@ -131,8 +137,32 @@ class CoachChatController extends StateNotifier<CoachChatState> {
   final CoachThreadRepository _threadRepository;
   final CoachFeedbackRepository _feedbackRepository;
 
+  /// Fired once per genuinely new assistant reply (never for restored
+  /// history on `_init`/`openThread`) — wired by the provider below to
+  /// honor Auto-read Replies (Section 3 of the female-voice requirement:
+  /// "Auto-read replies — Off by default, On optional").
+  final void Function(String text)? _onAssistantReply;
+
   Future<void> _init() async {
     final loaded = await _threadRepository.loadMostRecentThread();
+    state = state.copyWith(
+      messages: loaded.messages,
+      threadId: loaded.threadId,
+      status: CoachConnectionStatus.connected,
+    );
+  }
+
+  /// Loads a specific real, persisted thread — used when the hub's
+  /// "Recent Chats" row for an older (not-most-recent) conversation is
+  /// tapped, so it opens that actual conversation rather than always
+  /// falling back to whichever thread is most recent. A no-op if [threadId]
+  /// already matches the thread currently shown.
+  Future<void> openThread(String threadId) async {
+    if (!CoachBackendConfig.isConfigured || threadId == state.threadId) {
+      return;
+    }
+    state = state.copyWith(status: CoachConnectionStatus.connecting);
+    final loaded = await _threadRepository.loadThread(threadId);
     state = state.copyWith(
       messages: loaded.messages,
       threadId: loaded.threadId,
@@ -201,6 +231,7 @@ class CoachChatController extends StateNotifier<CoachChatState> {
           threadId: threadId,
           status: CoachConnectionStatus.connected,
         );
+        _onAssistantReply?.call(message.text);
       case CoachBrainUnavailable():
         state = state.copyWith(
           messages: [
@@ -273,5 +304,40 @@ final coachChatControllerProvider =
         () => ref.read(coachBrainContextProvider),
         ref.watch(coachThreadRepositoryProvider),
         ref.watch(coachFeedbackRepositoryProvider),
+        (text) {
+          final settings = ref.read(coachSettingsControllerProvider);
+          if (!settings.autoReadReplies) return;
+          final speaker = ref.read(coachVoiceSpeakerProvider);
+          // Section 9 (audio conflict management): auto-read starting TTS
+          // must stop any active speech recognition first.
+          unawaited(
+            ref
+                .read(coachVoiceInputControllerProvider.notifier)
+                .stopListening()
+                .then(
+                  (_) => speaker
+                      .applySettings(
+                        preferFemale:
+                            settings.voicePreference ==
+                            CoachVoicePreference.femaleDefault,
+                        speed: settings.speechSpeed,
+                      )
+                      .then((_) => speaker.speak(text)),
+                ),
+          );
+        },
       );
+    });
+
+/// Real recent-thread summaries for the Coach hub's "Recent Chats" list
+/// (Section 5 of the stale-hub remediation) — refetched fresh every time
+/// the hub screen is opened (`autoDispose`), rather than cached forever,
+/// so a just-sent message shows up next time the hub is visited. Returns
+/// an empty list (rendered as an honest empty state, never fabricated
+/// rows) when no backend is configured or the user has no threads yet.
+final coachRecentThreadsProvider =
+    FutureProvider.autoDispose<List<CoachThreadSummary>>((ref) async {
+      if (!CoachBackendConfig.isConfigured) return const [];
+      final repo = ref.watch(coachThreadRepositoryProvider);
+      return repo.loadRecentThreadSummaries();
     });

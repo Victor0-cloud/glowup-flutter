@@ -1,4 +1,34 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Camera — Food Scan, Skin & Acne Scan, and Glow Shop Scanner's live
+         barcode recognition. android:required="false" so the app still
+         installs on camera-less devices (e.g. some tablets); every screen
+         that uses the camera already falls back honestly to a gallery/
+         manual-entry path when it isn't available (see
+         ImageAcquisitionProvider.supportsCameraCapture /
+         supportsLiveBarcodeScan). No other hardware/permission requested
+         here. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <!-- Walking & Steps — phone-only step counting (Android's
+         TYPE_STEP_COUNTER sensor via the `pedometer` plugin), required at
+         runtime on Android 10+ (API 29+). android:required="false" so the
+         app still installs on devices with no step-counter hardware;
+         WalkingHomeScreen shows an honest "not available" state there
+         (see StepSource.isSupported/checkCapability) rather than hiding
+         the module. Fine location is requested only when the user
+         actually taps "Start Walk" (never eagerly) for real GPS
+         distance/pace during a walk session — see
+         WalkSessionController._startLocation. -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- AI Coach voice input (speech-to-text via the `speech_to_text`
+         plugin) — requested only when the user taps the mic button in
+         Chat (CoachVoiceInputController.startListening), never eagerly.
+         Denial is handled honestly (CoachListenStatus.permissionDenied),
+         never a crash. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="glow_up"
         android:name="${applicationName}"

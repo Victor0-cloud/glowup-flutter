@@ -168,6 +168,12 @@ void main() {
           'hasRecentPainFlag',
           'todayWaterMl',
           'todayWaterGoalMl',
+          // Authoritative device date/time — never sensitive content, and
+          // always present (see the Aug-27 date-bug fix's own tests in
+          // coach_brain_temporal_test.dart).
+          'currentLocalDate',
+          'currentLocalDateTime',
+          'timezoneOffsetMinutes',
         };
         expect(allowedKeys.containsAll(json.keys), isTrue);
 

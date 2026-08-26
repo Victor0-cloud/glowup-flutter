@@ -73,7 +73,7 @@ class AuthController extends StateNotifier<AsyncValue<Session?>> {
   bool get isEmailVerified => currentUser?.emailConfirmedAt != null;
 
   String get _redirectUri {
-    if (kIsWeb) return AuthConfig.webDevRedirectUri;
+    if (kIsWeb) return AuthConfig.webRedirectUri;
     try {
       if (Platform.isWindows) return AuthConfig.windowsRedirectUri;
     } catch (_) {

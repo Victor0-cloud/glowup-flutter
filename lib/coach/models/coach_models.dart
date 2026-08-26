@@ -35,19 +35,19 @@ class ChatMessage {
   );
 }
 
-/// One row in the hub's "Recent Chats" list (368:2327 etc). Figma doesn't
-/// wire these to distinct threads — tapping any of them opens the single
-/// 23e chat screen, which is the only conversation surface the design
-/// defines.
+/// One row in the hub's real "Recent Chats" list — built from a real
+/// `CoachThreadSummary` (see `CoachThreadRepository.loadRecentThreadSummaries`),
+/// never fabricated sample data. Tapping a row opens that specific real,
+/// persisted thread (see `CoachChatController.openThread`).
 class ConversationPreview {
   const ConversationPreview({
-    required this.avatarEmoji,
+    required this.threadId,
     required this.title,
     required this.preview,
     required this.timeLabel,
   });
 
-  final String avatarEmoji;
+  final String threadId;
   final String title;
   final String preview;
   final String timeLabel;
@@ -107,10 +107,34 @@ extension NotificationFrequencyLabel on NotificationFrequency {
   };
 }
 
+/// AI Coach Voice setting (Section 3 of the female-TTS requirement) — MVP
+/// keeps this to exactly two choices, matching the brief's own "keep it
+/// simple" instruction.
+enum CoachVoicePreference { femaleDefault, systemDefault }
+
+extension CoachVoicePreferenceLabel on CoachVoicePreference {
+  String get label => switch (this) {
+    CoachVoicePreference.femaleDefault => 'Female (Default)',
+    CoachVoicePreference.systemDefault => 'System Default',
+  };
+}
+
+enum CoachSpeechSpeed { slow, normal, fast }
+
+extension CoachSpeechSpeedLabel on CoachSpeechSpeed {
+  String get label => switch (this) {
+    CoachSpeechSpeed.slow => 'Slow',
+    CoachSpeechSpeed.normal => 'Normal',
+    CoachSpeechSpeed.fast => 'Fast',
+  };
+}
+
 /// 23h's 5 toggles + 2 selectors, exactly as the frame seeds them: the
 /// first three toggles on, Nutrition Tips off (confirmed via the distinct
 /// `toggle`/`toggle1` exported track assets), Encouraging + Regular
-/// pre-selected.
+/// pre-selected. [voicePreference]/[speechSpeed]/[autoReadReplies] are the
+/// female-AI-Coach-TTS additions — defaults match the brief exactly:
+/// Female voice on, Normal speed, auto-read off.
 class CoachSettingsState {
   const CoachSettingsState({
     this.proactiveCheckins = true,
@@ -120,6 +144,9 @@ class CoachSettingsState {
     this.sleepReminders = true,
     this.personality = CoachPersonality.encouraging,
     this.frequency = NotificationFrequency.regular,
+    this.voicePreference = CoachVoicePreference.femaleDefault,
+    this.speechSpeed = CoachSpeechSpeed.normal,
+    this.autoReadReplies = false,
   });
 
   final bool proactiveCheckins;
@@ -129,6 +156,9 @@ class CoachSettingsState {
   final bool sleepReminders;
   final CoachPersonality personality;
   final NotificationFrequency frequency;
+  final CoachVoicePreference voicePreference;
+  final CoachSpeechSpeed speechSpeed;
+  final bool autoReadReplies;
 
   CoachSettingsState copyWith({
     bool? proactiveCheckins,
@@ -138,6 +168,9 @@ class CoachSettingsState {
     bool? sleepReminders,
     CoachPersonality? personality,
     NotificationFrequency? frequency,
+    CoachVoicePreference? voicePreference,
+    CoachSpeechSpeed? speechSpeed,
+    bool? autoReadReplies,
   }) {
     return CoachSettingsState(
       proactiveCheckins: proactiveCheckins ?? this.proactiveCheckins,
@@ -147,6 +180,9 @@ class CoachSettingsState {
       sleepReminders: sleepReminders ?? this.sleepReminders,
       personality: personality ?? this.personality,
       frequency: frequency ?? this.frequency,
+      voicePreference: voicePreference ?? this.voicePreference,
+      speechSpeed: speechSpeed ?? this.speechSpeed,
+      autoReadReplies: autoReadReplies ?? this.autoReadReplies,
     );
   }
 }
@@ -170,118 +206,41 @@ class CoachHubCopy {
   final CoachHubWidget widget;
 }
 
+/// Per-TOD Coach Tip copy — deliberately generic wellness suggestions with
+/// no invented personal metrics (no percentages, no claimed personal
+/// trends/effects). Glow Up has no real per-user tip-generation engine yet,
+/// so this is Option B from the stale-hub remediation ("an honest generic
+/// wellness tip that contains no invented personal metrics"), not a real
+/// Brain-derived tip — see `CoachTipCard`.
 const Map<TodPeriod, CoachHubCopy> kCoachHubCopy = {
   TodPeriod.morning: CoachHubCopy(
     emoji: '☀️',
     greeting: 'Good morning! Ready to glow?',
     tip:
-        '"Your morning workouts boost energy by 40%. Start your day with 5 minutes of stretching."',
+        '"A few minutes of gentle stretching can be a simple way to start your day."',
     widget: CoachHubWidget.none,
   ),
   TodPeriod.afternoon: CoachHubCopy(
     emoji: '🌤',
     greeting: "Afternoon check-in! How's your energy?",
     tip:
-        '"You\'re 60% through today\'s goals — keep going! A quick walk outside now will defeat that afternoon slump."',
+        '"A short walk or stretch break can be a good way to reset your energy this afternoon."',
     widget: CoachHubWidget.todaysTarget,
   ),
   TodPeriod.evening: CoachHubCopy(
     emoji: '🌅',
     greeting: 'Evening wind-down time.',
     tip:
-        '"Great job on today\'s workout! Tomorrow try adding 5 min stretching. Let\'s make sure tonight is calm."',
+        '"A few slow breaths can help your body start easing into the evening."',
     widget: CoachHubWidget.none,
   ),
   TodPeriod.night: CoachHubCopy(
     emoji: '🌙',
     greeting: 'Time to rest and recover.',
     tip:
-        '"You completed 85% of today\'s goals. Sleep well! Dim your lights now to boost natural melatonin."',
+        '"Dimming the lights and relaxing your shoulders can help signal that it\'s time to rest."',
     widget: CoachHubWidget.sleepTarget,
   ),
-};
-
-const Map<TodPeriod, List<ConversationPreview>> kCoachRecentChats = {
-  TodPeriod.morning: [
-    ConversationPreview(
-      avatarEmoji: '🤖',
-      title: 'AI Mascot',
-      preview: 'Awesome job on completing your Morning Stretch today!',
-      timeLabel: '9:00 AM',
-    ),
-    ConversationPreview(
-      avatarEmoji: '✨',
-      title: 'Weekly Plan',
-      preview: 'Your personalized wellness schedule has been finalized.',
-      timeLabel: '8:15 AM',
-    ),
-    ConversationPreview(
-      avatarEmoji: '✨',
-      title: 'Daily Spark',
-      preview: 'Remember to drink a full glass of water first thing.',
-      timeLabel: '7:00 AM',
-    ),
-  ],
-  TodPeriod.afternoon: [
-    ConversationPreview(
-      avatarEmoji: '🤖',
-      title: 'AI Mascot',
-      preview: 'You are doing great! Ready for your afternoon check-in?',
-      timeLabel: '2:30 PM',
-    ),
-    ConversationPreview(
-      avatarEmoji: '✨',
-      title: 'Hydration Alert',
-      preview: 'Time for glass #5. Keep those hydration targets on track.',
-      timeLabel: '1:45 PM',
-    ),
-    ConversationPreview(
-      avatarEmoji: '✨',
-      title: 'Stretch Partner',
-      preview: 'Quick desk stretch scheduled in 5 minutes.',
-      timeLabel: '1:00 PM',
-    ),
-  ],
-  TodPeriod.evening: [
-    ConversationPreview(
-      avatarEmoji: '🤖',
-      title: 'AI Mascot',
-      preview: "Wonderful evening! Let's reflect on your routine success.",
-      timeLabel: '7:00 PM',
-    ),
-    ConversationPreview(
-      avatarEmoji: '✨',
-      title: 'Wind Down Prep',
-      preview: 'Optimal breathing exercises prepared for tonight.',
-      timeLabel: '6:15 PM',
-    ),
-    ConversationPreview(
-      avatarEmoji: '✨',
-      title: 'Wellness Reflection',
-      preview: 'What made you smile today? Share with me.',
-      timeLabel: '5:30 PM',
-    ),
-  ],
-  TodPeriod.night: [
-    ConversationPreview(
-      avatarEmoji: '🤖',
-      title: 'AI Mascot',
-      preview: 'Rest is just as critical as training. Sleep well!',
-      timeLabel: '10:30 PM',
-    ),
-    ConversationPreview(
-      avatarEmoji: '✨',
-      title: 'Sleep Prep',
-      preview: 'Soft ambient music tracks selected for tonight.',
-      timeLabel: '9:45 PM',
-    ),
-    ConversationPreview(
-      avatarEmoji: '✨',
-      title: 'Gratitude Journal',
-      preview: 'Log your reflections before shutting down.',
-      timeLabel: '9:00 PM',
-    ),
-  ],
 };
 
 const kCoachPlanItems = [

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -105,6 +106,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       (_isMetric
           ? _heightController.text.trim().isNotEmpty
           : _feetController.text.trim().isNotEmpty);
+
+  /// Cross-platform image provider for a locally-picked photo path — never
+  /// touches `dart:io`'s FileImage on Web, where [path] is a `blob:` URL
+  /// (unsupported there; see the Web safety audit). NetworkImage loads a
+  /// `blob:` URL correctly via the browser's own image loading.
+  ImageProvider _photoImageProvider(String path) =>
+      kIsWeb ? NetworkImage(path) : FileImage(File(path));
 
   Future<void> _pickPhoto() async {
     setState(() => _pickingPhoto = true);
@@ -249,7 +257,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               color: AppColors.cardStart,
                               image: _photoPath != null
                                   ? DecorationImage(
-                                      image: FileImage(File(_photoPath!)),
+                                      image: _photoImageProvider(
+                                        _photoPath!,
+                                      ),
                                       fit: BoxFit.cover,
                                     )
                                   : null,

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,10 +9,20 @@ import '../../core/widgets/sub_screen_header.dart';
 import '../../scan/models/scan_analysis_models.dart';
 import '../../scan/providers/image_acquisition_provider.dart';
 import '../../scan/providers/scan_analysis_provider.dart';
+import '../../scan/widgets/camera_permission_help.dart';
+import '../../scan/widgets/scan_image_preview.dart';
 import '../models/food_scan_models.dart';
 import '../state/food_scan_controller.dart';
 
-enum _Step { intro, permission, preview, analyzing, manualEntry, confirm }
+enum _Step {
+  intro,
+  permission,
+  preview,
+  analyzing,
+  analysisFailed,
+  manualEntry,
+  confirm,
+}
 
 /// The complete Food Scan flow — intro, permission explanation,
 /// camera-or-gallery selection (file picker on Windows, where live
@@ -42,6 +50,7 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> {
   String? _imagePath;
   String? _error;
   bool _busy = false;
+  bool _permissionDenied = false;
   final List<MealItem> _items = [];
   final _noteController = TextEditingController();
   int _itemIdSuffix = 0;
@@ -71,32 +80,52 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _permissionDenied = false;
     });
-    final path = await _acquisition.captureFromCamera();
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      if (path != null) {
-        _imagePath = path;
-        _step = _Step.preview;
-      }
-    });
+    try {
+      final path = await _acquisition.captureFromCamera();
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        if (path != null) {
+          _imagePath = path;
+          _step = _Step.preview;
+        }
+      });
+    } on CameraPermissionDeniedException {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _permissionDenied = true;
+        _error = cameraPermissionDeniedMessage;
+      });
+    }
   }
 
   Future<void> _pickFromGallery() async {
     setState(() {
       _busy = true;
       _error = null;
+      _permissionDenied = false;
     });
-    final path = await _acquisition.pickFromGallery();
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      if (path != null) {
-        _imagePath = path;
-        _step = _Step.preview;
-      }
-    });
+    try {
+      final path = await _acquisition.pickFromGallery();
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        if (path != null) {
+          _imagePath = path;
+          _step = _Step.preview;
+        }
+      });
+    } on CameraPermissionDeniedException {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _permissionDenied = true;
+        _error = cameraPermissionDeniedMessage;
+      });
+    }
   }
 
   void _removeImage() {
@@ -111,20 +140,30 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> {
   }
 
   /// Calls the real analysis provider on the captured/selected photo.
-  /// Falls back honestly to an empty, manually-editable item list (with
-  /// the "not connected yet" banner) whenever the provider is
-  /// unavailable or the call fails for any reason — never a fabricated
-  /// detection.
+  /// Three honest outcomes, never a fabricated detection: (1) provider not
+  /// configured at all — goes straight to manual entry with the "not
+  /// connected yet" banner; (2) a configured provider's call genuinely
+  /// fails (network/timeout/etc.) — offers an explicit Retry rather than
+  /// silently dropping into an unexplained empty manual-entry screen; (3)
+  /// success — pre-fills the suggested items for review. `_busy` guards
+  /// against a rapid double-tap on "Continue" firing this twice.
   Future<void> _runAnalysis() async {
     final path = _imagePath;
     if (path == null) {
       setState(() => _step = _Step.manualEntry);
       return;
     }
-    setState(() => _step = _Step.analyzing);
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _step = _Step.analyzing;
+    });
     final result = await _analysis.analyzeFood(path);
     if (!mounted) return;
+    final providerWasAvailable =
+        _analysisState == ScanProviderCapability.available;
     setState(() {
+      _busy = false;
       if (result != null) {
         _items
           ..clear()
@@ -138,8 +177,14 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> {
               ),
           ]);
         _qualityNote = result.qualityNote;
+        _step = _Step.manualEntry;
+      } else if (providerWasAvailable) {
+        // The provider IS connected but this specific call failed — an
+        // honest, retryable failure, distinct from "never configured."
+        _step = _Step.analysisFailed;
+      } else {
+        _step = _Step.manualEntry;
       }
-      _step = _Step.manualEntry;
     });
   }
 
@@ -237,9 +282,37 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> {
       _Step.permission => _permissionStep(),
       _Step.preview => _previewStep(),
       _Step.analyzing => _analyzingStep(),
+      _Step.analysisFailed => _analysisFailedStep(),
       _Step.manualEntry => _manualEntryStep(),
       _Step.confirm => _confirmStep(),
     };
+  }
+
+  Widget _analysisFailedStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GlowCard(
+          child: Text(
+            "Couldn't analyze that photo right now. This is usually a "
+            'temporary connection issue — you can try again, or enter the '
+            'meal manually.',
+            style: AppTextStyles.subtitle.copyWith(fontSize: 14),
+          ),
+        ),
+        const SizedBox(height: 20),
+        _PrimaryButton(
+          label: 'Retry',
+          onTap: _busy ? null : _runAnalysis,
+          loading: _busy,
+        ),
+        const SizedBox(height: 12),
+        _SecondaryButton(
+          label: 'Enter Manually Instead',
+          onTap: _skipToManualEntry,
+        ),
+      ],
+    );
   }
 
   Widget _analyzingStep() {
@@ -332,6 +405,10 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> {
               fontSize: 13,
             ),
           ),
+          if (_permissionDenied && supportsOpenAppSettingsDeepLink) ...[
+            const SizedBox(height: 8),
+            _SecondaryButton(label: 'Open Settings', onTap: openAppSettings),
+          ],
         ],
         const SizedBox(height: 20),
         if (_acquisition.supportsCameraCapture) ...[
@@ -343,7 +420,9 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> {
           const SizedBox(height: 12),
         ],
         _SecondaryButton(
-          label: 'Choose Photo',
+          label: _acquisition.supportsCameraCapture
+              ? 'Choose from gallery'
+              : 'Choose Photo',
           onTap: _busy ? null : _pickFromGallery,
         ),
         const SizedBox(height: 12),
@@ -363,18 +442,10 @@ class _FoodScanScreenState extends ConsumerState<FoodScanScreen> {
         if (path != null)
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: AspectRatio(
-              aspectRatio: 4 / 3,
-              child: File(path).existsSync()
-                  ? Image.file(File(path), fit: BoxFit.cover)
-                  : Container(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Image not found',
-                        style: AppTextStyles.subtitle,
-                      ),
-                    ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 280,
+              child: ScanImagePreview(path: path, fit: BoxFit.contain),
             ),
           ),
         const SizedBox(height: 16),

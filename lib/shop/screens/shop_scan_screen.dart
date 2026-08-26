@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,7 +8,11 @@ import '../../core/widgets/gradient_background.dart';
 import '../../core/widgets/sub_screen_header.dart';
 import '../../scan/models/scan_analysis_models.dart'
     show ScanProviderCapability;
+import '../../scan/providers/barcode_acquisition_provider.dart';
 import '../../scan/providers/image_acquisition_provider.dart';
+import '../../scan/widgets/camera_permission_help.dart';
+import '../../scan/widgets/live_barcode_scanner.dart';
+import '../../scan/widgets/scan_image_preview.dart';
 import '../models/shop_models.dart';
 import '../providers/product_data_provider.dart';
 import '../state/shop_controller.dart';
@@ -18,6 +20,7 @@ import '../state/shop_controller.dart';
 enum _Step {
   category,
   inputMethod,
+  liveBarcodeScan,
   barcodeEntry,
   capture,
   analyzing,
@@ -44,6 +47,7 @@ class ShopScanScreen extends ConsumerStatefulWidget {
 class _ShopScanScreenState extends ConsumerState<ShopScanScreen> {
   final _acquisition = ImagePickerAcquisitionProvider();
   late final ProductDataProvider _provider = selectProductDataProvider();
+  final _scannerKey = GlobalKey<LiveBarcodeScannerState>();
 
   _Step _step = _Step.category;
   ProductCategory? _category;
@@ -51,6 +55,7 @@ class _ShopScanScreenState extends ConsumerState<ShopScanScreen> {
   String? _error;
   String? _info;
   bool _busy = false;
+  bool _permissionDenied = false;
   ScannedProduct? _draft;
   ScannedProduct? _savedProduct;
 
@@ -141,6 +146,49 @@ class _ShopScanScreenState extends ConsumerState<ShopScanScreen> {
     _info = null;
   });
 
+  void _goToLiveScan() => setState(() {
+    _step = _Step.liveBarcodeScan;
+    _error = null;
+    _info = null;
+  });
+
+  /// Handles one barcode recognized by [LiveBarcodeScanner] — locked and
+  /// fired exactly once by the widget itself, so this never double-runs
+  /// for the same code sitting in frame. A not-found/offline/failure
+  /// result re-arms the same live scanner (via [_scannerKey]) rather than
+  /// leaving the camera view dead, so "scan another" works without extra
+  /// navigation.
+  Future<void> _handleLiveBarcode(String code) async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+      _info = null;
+    });
+    final result = await _provider.lookupBarcode(code, categoryHint: _category);
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      switch (result.status) {
+        case ProductLookupStatus.found:
+          _draft = result.product;
+          _loadDraftIntoControllers();
+          _step = _Step.form;
+        case ProductLookupStatus.notFound:
+          _info =
+              'Product not found for that barcode. You can scan another, try a label photo, or enter it manually.';
+          _scannerKey.currentState?.reset();
+        case ProductLookupStatus.offline:
+          _error =
+              'No connection right now. Check your network and try again.';
+          _scannerKey.currentState?.reset();
+        case ProductLookupStatus.providerFailure:
+          _error = 'Could not look up that barcode right now.';
+          _scannerKey.currentState?.reset();
+      }
+    });
+  }
+
   Future<void> _lookupBarcode() async {
     final code = _barcodeController.text.trim();
     if (code.isEmpty || _busy) return;
@@ -177,23 +225,49 @@ class _ShopScanScreenState extends ConsumerState<ShopScanScreen> {
   });
 
   Future<void> _capture() async {
-    setState(() => _busy = true);
-    final path = await _acquisition.captureFromCamera();
-    if (!mounted) return;
     setState(() {
-      _busy = false;
-      if (path != null) _imagePath = path;
+      _busy = true;
+      _permissionDenied = false;
+      _error = null;
     });
+    try {
+      final path = await _acquisition.captureFromCamera();
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        if (path != null) _imagePath = path;
+      });
+    } on CameraPermissionDeniedException {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _permissionDenied = true;
+        _error = cameraPermissionDeniedMessage;
+      });
+    }
   }
 
   Future<void> _pickFromGallery() async {
-    setState(() => _busy = true);
-    final path = await _acquisition.pickFromGallery();
-    if (!mounted) return;
     setState(() {
-      _busy = false;
-      if (path != null) _imagePath = path;
+      _busy = true;
+      _permissionDenied = false;
+      _error = null;
     });
+    try {
+      final path = await _acquisition.pickFromGallery();
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        if (path != null) _imagePath = path;
+      });
+    } on CameraPermissionDeniedException {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _permissionDenied = true;
+        _error = cameraPermissionDeniedMessage;
+      });
+    }
   }
 
   Future<void> _analyzePhoto() async {
@@ -431,12 +505,61 @@ class _ShopScanScreenState extends ConsumerState<ShopScanScreen> {
     return switch (_step) {
       _Step.category => _categoryStep(),
       _Step.inputMethod => _inputMethodStep(),
+      _Step.liveBarcodeScan => _liveBarcodeScanStep(),
       _Step.barcodeEntry => _barcodeEntryStep(),
       _Step.capture => _captureStep(),
       _Step.analyzing => _analyzingStep(),
       _Step.form => _formStep(),
       _Step.saved => _savedStep(),
     };
+  }
+
+  Widget _liveBarcodeScanStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GlowCard(
+          child: Text(
+            'Point your camera at the barcode. It scans automatically — no need to take a photo.',
+            style: AppTextStyles.subtitle.copyWith(fontSize: 13),
+          ),
+        ),
+        const SizedBox(height: 12),
+        LiveBarcodeScanner(key: _scannerKey, onDetected: _handleLiveBarcode),
+        if (_busy) ...[
+          const SizedBox(height: 12),
+          const Center(
+            child: CircularProgressIndicator(color: AppColors.blue),
+          ),
+        ],
+        if (_error != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _error!,
+            style: AppTextStyles.captionBold.copyWith(
+              color: AppColors.orange,
+              fontSize: 13,
+            ),
+          ),
+        ],
+        if (_info != null) ...[
+          const SizedBox(height: 10),
+          GlowCard(
+            child: Text(
+              _info!,
+              style: AppTextStyles.subtitle.copyWith(fontSize: 13),
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
+        _SecondaryButton(
+          label: 'Enter Barcode Manually',
+          onTap: _goToBarcodeEntry,
+        ),
+        const SizedBox(height: 12),
+        _SecondaryButton(label: 'Try Photo Instead', onTap: _goToCapture),
+      ],
+    );
   }
 
   Widget _categoryStep() {
@@ -489,7 +612,16 @@ class _ShopScanScreenState extends ConsumerState<ShopScanScreen> {
           ),
         ),
         const SizedBox(height: 20),
-        _PrimaryButton(label: 'Enter Barcode', onTap: _goToBarcodeEntry),
+        if (supportsLiveBarcodeScan) ...[
+          _PrimaryButton(label: 'Scan Barcode', onTap: _goToLiveScan),
+          const SizedBox(height: 12),
+          _SecondaryButton(
+            label: 'Enter Barcode Manually',
+            onTap: _goToBarcodeEntry,
+          ),
+        ] else ...[
+          _PrimaryButton(label: 'Enter Barcode', onTap: _goToBarcodeEntry),
+        ],
         const SizedBox(height: 12),
         _SecondaryButton(
           label: _labelPhotoCapability == ScanProviderCapability.available
@@ -577,18 +709,10 @@ class _ShopScanScreenState extends ConsumerState<ShopScanScreen> {
         if (path != null)
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: AspectRatio(
-              aspectRatio: 4 / 3,
-              child: File(path).existsSync()
-                  ? Image.file(File(path), fit: BoxFit.cover)
-                  : Container(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Image not found',
-                        style: AppTextStyles.subtitle,
-                      ),
-                    ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 280,
+              child: ScanImagePreview(path: path, fit: BoxFit.contain),
             ),
           )
         else
@@ -600,6 +724,20 @@ class _ShopScanScreenState extends ConsumerState<ShopScanScreen> {
               style: AppTextStyles.subtitle.copyWith(fontSize: 14),
             ),
           ),
+        if (_error != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _error!,
+            style: AppTextStyles.captionBold.copyWith(
+              color: AppColors.orange,
+              fontSize: 13,
+            ),
+          ),
+          if (_permissionDenied && supportsOpenAppSettingsDeepLink) ...[
+            const SizedBox(height: 8),
+            _SecondaryButton(label: 'Open Settings', onTap: openAppSettings),
+          ],
+        ],
         const SizedBox(height: 16),
         if (path == null) ...[
           if (_acquisition.supportsCameraCapture) ...[
@@ -611,7 +749,9 @@ class _ShopScanScreenState extends ConsumerState<ShopScanScreen> {
             const SizedBox(height: 12),
           ],
           _SecondaryButton(
-            label: 'Choose Photo',
+            label: _acquisition.supportsCameraCapture
+                ? 'Choose from gallery'
+                : 'Choose Photo',
             onTap: _busy ? null : _pickFromGallery,
           ),
           const SizedBox(height: 12),

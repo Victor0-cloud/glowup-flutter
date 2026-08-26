@@ -77,6 +77,10 @@ class ReactiveEventProcessor {
       case LearningEventType.recommendationModified:
       case LearningEventType.recommendationCompleted:
       case LearningEventType.planModified:
+      case LearningEventType.walkStarted:
+      case LearningEventType.walkCompleted:
+      case LearningEventType.dailyStepsSnapshot:
+      case LearningEventType.stepGoalReached:
         // Ingested at Tier 0; no Tier 1 reactive processing defined for
         // these in this first slice (documented scope, not an omission —
         // see the Architecture Gap Report's first-slice list).

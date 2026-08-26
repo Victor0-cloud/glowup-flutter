@@ -39,6 +39,33 @@
 			<string>com.glowup.glowUp.auth</string>
 		</dict>
 	</array>
+	<!-- Camera — Food Scan, Skin & Acne Scan, and Glow Shop Scanner's live
+	     barcode recognition. REQUIRED: iOS terminates the app on any
+	     camera access attempt without this key present, regardless of
+	     whether the feature is actually reached. No other privacy-
+	     sensitive permission is requested. -->
+	<key>NSCameraUsageDescription</key>
+	<string>Glow Up uses your camera so you can photograph a meal, take a Skin Scan photo, or scan a product barcode — always started by your own tap, never automatically.</string>
+	<!-- Walking & Steps — phone-only step counting via Core Motion
+	     (CMPedometer, wrapped by the `pedometer` plugin). REQUIRED for any
+	     motion/fitness data access, regardless of whether the feature is
+	     actually reached. -->
+	<key>NSMotionUsageDescription</key>
+	<string>Glow Up uses motion &amp; fitness data to count your steps for Walking &amp; Steps — no Apple Watch or Fitbit required.</string>
+	<!-- Real GPS distance/pace during a "Start Walk" session only — never
+	     requested until the user actually starts a walk (see
+	     WalkSessionController._startLocation), and only "when in use," never
+	     background/always. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Glow Up uses your location only while you're on a Start Walk session, to track real distance and pace.</string>
+	<!-- AI Coach voice input (speech-to-text via the `speech_to_text`
+	     plugin) — requested only when the user taps the mic button in Chat
+	     (CoachVoiceInputController.startListening), never eagerly. Both
+	     keys are required by iOS for on-device speech recognition. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Glow Up uses your microphone so you can speak your message to the AI Coach instead of typing.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Glow Up uses speech recognition to turn what you say to the AI Coach into text.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

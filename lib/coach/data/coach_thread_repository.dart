@@ -14,6 +14,25 @@ class LoadedCoachThread {
   final List<ChatMessage> messages;
 }
 
+/// One real row for the Coach hub's "Recent Chats" list — the thread's own
+/// last message, never a fabricated preview. [title] is the thread's real
+/// `coach_threads.title` (currently always null in practice, since no
+/// title-generation feature exists yet) falling back to a generic,
+/// non-fabricated label rather than inventing a topic name.
+class CoachThreadSummary {
+  const CoachThreadSummary({
+    required this.threadId,
+    required this.title,
+    required this.lastMessagePreview,
+    required this.lastMessageAt,
+  });
+
+  final String threadId;
+  final String title;
+  final String lastMessagePreview;
+  final DateTime lastMessageAt;
+}
+
 /// Real persistence for Coach conversations (see
 /// `supabase/migrations/0006_glow_up_brain.sql`: `coach_threads` +
 /// `coach_messages`). The Edge Function is the only writer of assistant
@@ -52,13 +71,23 @@ class CoachThreadRepository {
         .limit(1);
     if (threadRows.isEmpty) return const LoadedCoachThread(messages: []);
 
-    final threadId = threadRows.first['id'] as String;
+    return loadThread(threadRows.first['id'] as String);
+  }
+
+  /// A specific real thread by id — used when the user taps a specific row
+  /// in the hub's real "Recent Chats" list (rather than always reopening
+  /// whichever thread is most recent). RLS (`user_id = auth.uid()` on both
+  /// `coach_threads` and `coach_messages`) makes this safe to call with any
+  /// id: a thread that doesn't belong to the current user simply returns
+  /// no messages, never another user's data.
+  Future<LoadedCoachThread> loadThread(String threadId) async {
     final messageRows = await _client
         .from('coach_messages')
         .select('id, role, content, created_at')
         .eq('thread_id', threadId)
         .order('created_at', ascending: false)
         .limit(kMaxRestoredMessages);
+    if (messageRows.isEmpty) return const LoadedCoachThread(messages: []);
 
     final messages = messageRows.reversed
         .map((row) {
@@ -81,5 +110,52 @@ class CoachThreadRepository {
         .toList(growable: false);
 
     return LoadedCoachThread(threadId: threadId, messages: messages);
+  }
+
+  /// Up to [limit] real, most-recently-updated threads for the current
+  /// user, each with its own real last-message preview and timestamp
+  /// (never fabricated sample rows). A thread with no messages yet (should
+  /// not normally happen — the Edge Function always writes the user's
+  /// message immediately after creating a thread — but handled honestly
+  /// rather than assumed away) is skipped, since there is nothing real to
+  /// preview for it.
+  Future<List<CoachThreadSummary>> loadRecentThreadSummaries({
+    int limit = 3,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const [];
+
+    final threadRows = await _client
+        .from('coach_threads')
+        .select('id, title')
+        .eq('user_id', userId)
+        .order('updated_at', ascending: false)
+        .limit(limit);
+    if (threadRows.isEmpty) return const [];
+
+    final summaries = <CoachThreadSummary>[];
+    for (final threadRow in threadRows) {
+      final threadId = threadRow['id'] as String;
+      final lastMessageRows = await _client
+          .from('coach_messages')
+          .select('content, created_at')
+          .eq('thread_id', threadId)
+          .order('created_at', ascending: false)
+          .limit(1);
+      if (lastMessageRows.isEmpty) continue;
+      final lastMessage = lastMessageRows.first;
+      final createdAt =
+          DateTime.tryParse(lastMessage['created_at'] as String? ?? '') ??
+          DateTime.now();
+      summaries.add(
+        CoachThreadSummary(
+          threadId: threadId,
+          title: (threadRow['title'] as String?) ?? 'Coach Conversation',
+          lastMessagePreview: lastMessage['content'] as String,
+          lastMessageAt: createdAt,
+        ),
+      );
+    }
+    return summaries;
   }
 }

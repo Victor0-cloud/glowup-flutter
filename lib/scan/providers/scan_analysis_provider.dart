@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/scan_backend_config.dart';
@@ -109,9 +109,17 @@ class RemoteScanAnalysisProvider implements ScanAnalysisProvider {
     if (mimeType == null || !kAllowedScanMimeTypes.contains(mimeType))
       return null;
 
-    final file = File(imagePath);
-    if (!await file.exists()) return null;
-    final bytes = await file.readAsBytes();
+    // XFile (from package:cross_file, already a transitive dependency via
+    // image_picker) reads real bytes cross-platform — including Web, where
+    // [imagePath] is a `blob:` URL and `dart:io`'s File has no meaning at
+    // all. A read failure (file gone, unreadable, blob revoked) is treated
+    // the same as "no image," never a crash.
+    List<int> bytes;
+    try {
+      bytes = await XFile(imagePath).readAsBytes();
+    } catch (_) {
+      return null;
+    }
     if (bytes.isEmpty || bytes.length > kMaxScanImageBytes) return null;
 
     if (!await _ensureSignedIn()) return null;

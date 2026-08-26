@@ -28,6 +28,7 @@ enum EventModule {
   connectedHealth,
   cycle,
   shop,
+  walking,
 }
 
 /// The canonical, versioned learning-event types (first slice: only the 16
@@ -127,6 +128,27 @@ enum LearningEventType {
   /// (symptom/energy/mood tracking) since the notebook is a distinct,
   /// separately-consented record type per the approved data contract.
   notebookEntryLogged,
+
+  /// 30th type — an intentional in-app walk session started (Section 9 of
+  /// the standalone Walking & Steps feature). Never fired for ambient
+  /// daily step accumulation — only a real "Start Walk" tap.
+  walkStarted,
+
+  /// 31st type — a walk session finished (paused/resumed transitions are
+  /// local-only UI state, never their own event). Carries the session's
+  /// own real duration/steps/distance — never the phone's whole-day step
+  /// total, which is [dailyStepsSnapshot]'s job.
+  walkCompleted,
+
+  /// 32nd type — a bounded daily aggregate (like [hydrationLogged]): the
+  /// current day's real cumulative step count as of the moment this event
+  /// was built. Never one event per individual step — see the module's
+  /// own "do not create one Brain event for every step" requirement.
+  dailyStepsSnapshot,
+
+  /// 33rd type — fired at most once per calendar day, the first time that
+  /// day's step count reaches the user's goal.
+  stepGoalReached,
 }
 
 enum EventSource { explicit, behavioral, imported, inferred }
@@ -445,6 +467,45 @@ const kEventTypeSchemas = <LearningEventType, EventTypeSchema>{
   ),
   LearningEventType.notebookEntryLogged: EventTypeSchema(
     type: LearningEventType.notebookEntryLogged,
+    maxPayloadBytes: 256,
+    retention: RetentionPolicy.hotWindowThenAggregate,
+    sampling: SamplingPolicy.always,
+    requiredConsent: ConsentScope.deviceLocal,
+    affectsSafety: false,
+    contributesToPatternEvidence: true,
+  ),
+  LearningEventType.walkStarted: EventTypeSchema(
+    type: LearningEventType.walkStarted,
+    maxPayloadBytes: 512,
+    retention: RetentionPolicy.hotWindowThenAggregate,
+    sampling: SamplingPolicy.always,
+    requiredConsent: ConsentScope.deviceLocal,
+    affectsSafety: false,
+    contributesToPatternEvidence: false,
+  ),
+  LearningEventType.walkCompleted: EventTypeSchema(
+    type: LearningEventType.walkCompleted,
+    maxPayloadBytes: 1024,
+    retention: RetentionPolicy.hotWindowThenAggregate,
+    sampling: SamplingPolicy.always,
+    // Structured duration/steps/distance/pace only, never free text — the
+    // Coach needs this to answer "what was my last walk" truthfully, the
+    // same reasoning already applied to workoutCompleted.
+    requiredConsent: ConsentScope.deviceLocal,
+    affectsSafety: false,
+    contributesToPatternEvidence: true,
+  ),
+  LearningEventType.dailyStepsSnapshot: EventTypeSchema(
+    type: LearningEventType.dailyStepsSnapshot,
+    maxPayloadBytes: 256,
+    retention: RetentionPolicy.hotWindowThenAggregate,
+    sampling: SamplingPolicy.moduleAggregated,
+    requiredConsent: ConsentScope.deviceLocal,
+    affectsSafety: false,
+    contributesToPatternEvidence: true,
+  ),
+  LearningEventType.stepGoalReached: EventTypeSchema(
+    type: LearningEventType.stepGoalReached,
     maxPayloadBytes: 256,
     retention: RetentionPolicy.hotWindowThenAggregate,
     sampling: SamplingPolicy.always,
@@ -1084,6 +1145,148 @@ class NotebookEntryPayload extends EventPayload {
   };
 }
 
+/// walkStarted — records that an intentional in-app walk began. Carries
+/// only the session id and, if the user picked a duration-preset routine,
+/// which one and its target duration — never a step/distance promise made
+/// in advance (see the module's "never promise a specific step count"
+/// rule).
+class WalkStartedPayload extends EventPayload {
+  const WalkStartedPayload({
+    required this.walkId,
+    this.routineId,
+    this.targetDurationSeconds,
+  });
+
+  final String walkId;
+
+  /// One of the fixed duration-preset routine ids (e.g. `'walk_10min'`),
+  /// or null for an open-ended walk with no chosen target.
+  final String? routineId;
+  final int? targetDurationSeconds;
+
+  factory WalkStartedPayload.fromJson(Map<String, dynamic> j) =>
+      WalkStartedPayload(
+        walkId: j['walkId'] as String,
+        routineId: j['routineId'] as String?,
+        targetDurationSeconds: j['targetDurationSeconds'] as int?,
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'walkId': walkId,
+    if (routineId != null) 'routineId': routineId,
+    if (targetDurationSeconds != null)
+      'targetDurationSeconds': targetDurationSeconds,
+  };
+}
+
+/// walkCompleted — the session's own real, measured stats. [steps] and
+/// [distanceMeters] are null (never fabricated) when the underlying
+/// sensor/GPS wasn't available for that session (e.g. desktop dev with no
+/// step sensor) — an honest partial record, never a guessed number.
+class WalkCompletedPayload extends EventPayload {
+  const WalkCompletedPayload({
+    required this.walkId,
+    required this.durationSeconds,
+    this.steps,
+    this.distanceMeters,
+    this.averagePaceSecondsPerKm,
+    this.routineId,
+  });
+
+  final String walkId;
+  final int durationSeconds;
+  final int? steps;
+  final double? distanceMeters;
+  final double? averagePaceSecondsPerKm;
+  final String? routineId;
+
+  factory WalkCompletedPayload.fromJson(Map<String, dynamic> j) =>
+      WalkCompletedPayload(
+        walkId: j['walkId'] as String,
+        durationSeconds: j['durationSeconds'] as int,
+        steps: j['steps'] as int?,
+        distanceMeters: (j['distanceMeters'] as num?)?.toDouble(),
+        averagePaceSecondsPerKm: (j['averagePaceSecondsPerKm'] as num?)
+            ?.toDouble(),
+        routineId: j['routineId'] as String?,
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'walkId': walkId,
+    'durationSeconds': durationSeconds,
+    if (steps != null) 'steps': steps,
+    if (distanceMeters != null) 'distanceMeters': distanceMeters,
+    if (averagePaceSecondsPerKm != null)
+      'averagePaceSecondsPerKm': averagePaceSecondsPerKm,
+    if (routineId != null) 'routineId': routineId,
+  };
+}
+
+/// dailyStepsSnapshot — the *current day's aggregate* (same "one snapshot
+/// per day, not one per step" discipline as [HydrationAggregatePayload]).
+/// [source] records which real step source produced this count (e.g.
+/// `'pedometer'`) — never fabricated when unsupported (no event is built
+/// at all in that case; see `WalkingController`).
+class DailyStepsSnapshotPayload extends EventPayload {
+  const DailyStepsSnapshotPayload({
+    required this.dateKey,
+    required this.steps,
+    required this.goal,
+    required this.source,
+  });
+
+  final String dateKey;
+  final int steps;
+  final int goal;
+  final String source;
+
+  factory DailyStepsSnapshotPayload.fromJson(Map<String, dynamic> j) =>
+      DailyStepsSnapshotPayload(
+        dateKey: j['dateKey'] as String,
+        steps: j['steps'] as int,
+        goal: j['goal'] as int,
+        source: j['source'] as String,
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'dateKey': dateKey,
+    'steps': steps,
+    'goal': goal,
+    'source': source,
+  };
+}
+
+/// stepGoalReached — fired at most once per calendar day (see
+/// `WalkingController`'s own dedup-by-dateKey guard).
+class StepGoalReachedPayload extends EventPayload {
+  const StepGoalReachedPayload({
+    required this.dateKey,
+    required this.steps,
+    required this.goal,
+  });
+
+  final String dateKey;
+  final int steps;
+  final int goal;
+
+  factory StepGoalReachedPayload.fromJson(Map<String, dynamic> j) =>
+      StepGoalReachedPayload(
+        dateKey: j['dateKey'] as String,
+        steps: j['steps'] as int,
+        goal: j['goal'] as int,
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'dateKey': dateKey,
+    'steps': steps,
+    'goal': goal,
+  };
+}
+
 /// planModified.
 class PlanModifiedPayload extends EventPayload {
   const PlanModifiedPayload({required this.descriptionCode, this.workoutId});
@@ -1154,6 +1357,14 @@ EventPayload _payloadFromJson(LearningEventType type, Map<String, dynamic> j) {
       return MoodCheckInPayload.fromJson(j);
     case LearningEventType.notebookEntryLogged:
       return NotebookEntryPayload.fromJson(j);
+    case LearningEventType.walkStarted:
+      return WalkStartedPayload.fromJson(j);
+    case LearningEventType.walkCompleted:
+      return WalkCompletedPayload.fromJson(j);
+    case LearningEventType.dailyStepsSnapshot:
+      return DailyStepsSnapshotPayload.fromJson(j);
+    case LearningEventType.stepGoalReached:
+      return StepGoalReachedPayload.fromJson(j);
   }
 }
 
@@ -1823,6 +2034,123 @@ class LearningEvent {
         feeling: feeling,
         hasNote: hasNote,
       ),
+      createdAt: DateTime.now(),
+    );
+  }
+
+  static LearningEvent walkStarted({
+    required String id,
+    required String userId,
+    required String walkId,
+    String? routineId,
+    int? targetDurationSeconds,
+    required DateTime occurredAt,
+  }) {
+    return LearningEvent(
+      id: id,
+      userId: userId,
+      type: LearningEventType.walkStarted,
+      module: EventModule.walking,
+      entityType: 'walk',
+      entityId: walkId,
+      occurredAt: occurredAt,
+      source: EventSource.explicit,
+      payload: WalkStartedPayload(
+        walkId: walkId,
+        routineId: routineId,
+        targetDurationSeconds: targetDurationSeconds,
+      ),
+      createdAt: DateTime.now(),
+    );
+  }
+
+  static LearningEvent walkCompleted({
+    required String id,
+    required String userId,
+    required String walkId,
+    required int durationSeconds,
+    int? steps,
+    double? distanceMeters,
+    double? averagePaceSecondsPerKm,
+    String? routineId,
+    required DateTime occurredAt,
+    // Additive, defaults to deviceLocal — the Coach only learns about a
+    // completed walk once this is explicitly opted in, same pattern as
+    // WorkoutHistoryController.workoutCompleted.
+    ConsentScope consentScope = ConsentScope.deviceLocal,
+  }) {
+    return LearningEvent(
+      id: id,
+      userId: userId,
+      type: LearningEventType.walkCompleted,
+      module: EventModule.walking,
+      entityType: 'walk',
+      entityId: walkId,
+      occurredAt: occurredAt,
+      source: EventSource.behavioral,
+      payload: WalkCompletedPayload(
+        walkId: walkId,
+        durationSeconds: durationSeconds,
+        steps: steps,
+        distanceMeters: distanceMeters,
+        averagePaceSecondsPerKm: averagePaceSecondsPerKm,
+        routineId: routineId,
+      ),
+      consentScope: consentScope,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  static LearningEvent dailyStepsSnapshot({
+    required String id,
+    required String userId,
+    required String dateKey,
+    required int steps,
+    required int goal,
+    required String source,
+    required DateTime occurredAt,
+    ConsentScope consentScope = ConsentScope.deviceLocal,
+  }) {
+    return LearningEvent(
+      id: id,
+      userId: userId,
+      type: LearningEventType.dailyStepsSnapshot,
+      module: EventModule.walking,
+      entityType: 'day',
+      entityId: dateKey,
+      occurredAt: occurredAt,
+      source: EventSource.behavioral,
+      payload: DailyStepsSnapshotPayload(
+        dateKey: dateKey,
+        steps: steps,
+        goal: goal,
+        source: source,
+      ),
+      consentScope: consentScope,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  static LearningEvent stepGoalReached({
+    required String id,
+    required String userId,
+    required String dateKey,
+    required int steps,
+    required int goal,
+    required DateTime occurredAt,
+    ConsentScope consentScope = ConsentScope.deviceLocal,
+  }) {
+    return LearningEvent(
+      id: id,
+      userId: userId,
+      type: LearningEventType.stepGoalReached,
+      module: EventModule.walking,
+      entityType: 'day',
+      entityId: dateKey,
+      occurredAt: occurredAt,
+      source: EventSource.behavioral,
+      payload: StepGoalReachedPayload(dateKey: dateKey, steps: steps, goal: goal),
+      consentScope: consentScope,
       createdAt: DateTime.now(),
     );
   }
