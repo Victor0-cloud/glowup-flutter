@@ -36,27 +36,10 @@ class AuthConfig {
   static const String windowsRedirectUri =
       'http://127.0.0.1:$windowsLoopbackPort/auth-callback';
 
-  /// Web — development redirect. Always available so local `flutter run -d
-  /// chrome`/dev builds keep working with zero extra config.
-  static const String webDevRedirectUri = 'http://localhost:3000';
+  /// Web — always return to the origin that is currently running the app.
+  /// This keeps local Flutter Web on its current localhost port and returns
+  /// production OAuth to the Vercel origin without build-time URL overrides.
+  static String get webRedirectUri => webRedirectUriFor(Uri.base);
 
-  /// Web — production redirect. Empty until the owner explicitly supplies
-  /// the real Vercel domain via
-  /// `--dart-define=WEB_PROD_REDIRECT_URI=https://<real-domain>/auth-callback`
-  /// — the exact same build-time mechanism already used for
-  /// SUPABASE_URL/SUPABASE_ANON_KEY. Never invented/guessed here; a
-  /// production domain does not exist yet (see the Web deployment
-  /// readiness audit that added this split).
-  static const String webProdRedirectUri = String.fromEnvironment(
-    'WEB_PROD_REDIRECT_URI',
-  );
-
-  /// The real Web redirect URI to use right now: [webProdRedirectUri] once
-  /// the owner has actually supplied one at build time, [webDevRedirectUri]
-  /// otherwise — so an unconfigured production build falls back to a
-  /// working (if wrong-for-prod) value rather than an empty redirect
-  /// target. This must also be added to Supabase's Authentication -> URL
-  /// Configuration -> Redirect URLs allow-list before it will work.
-  static String get webRedirectUri =>
-      webProdRedirectUri.isNotEmpty ? webProdRedirectUri : webDevRedirectUri;
+  static String webRedirectUriFor(Uri baseUri) => baseUri.origin;
 }

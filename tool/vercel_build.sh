@@ -35,14 +35,6 @@ flutter pub get
 # variables (Project Settings -> Environment Variables) — SUPABASE_URL and
 # the public anon/publishable key ONLY. Never the service-role key or any
 # other provider secret; none of those are ever read by client Dart code.
-#
-# WEB_PROD_REDIRECT_URI is not a secret — it's simply this deployment's own
-# known public URL, already wired through AuthConfig.webRedirectUri (see
-# lib/auth/config/auth_config.dart) so Google/email OAuth redirects back to
-# the real production origin instead of the http://localhost:3000 dev
-# fallback. Hardcoded here (not a Vercel env var) because it is a fixed,
-# public, non-sensitive constant for this exact deployment.
 flutter build web --release \
   --dart-define=SUPABASE_URL="${SUPABASE_URL:?SUPABASE_URL Vercel environment variable is not set}" \
-  --dart-define=SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY Vercel environment variable is not set}" \
-  --dart-define=WEB_PROD_REDIRECT_URI="https://glowup-flutter.vercel.app/auth-callback"
+  --dart-define=SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY Vercel environment variable is not set}"

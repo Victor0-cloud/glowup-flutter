@@ -162,6 +162,46 @@ void main() {
     });
   });
 
+  group('4a. Web OAuth returns to the current browser origin', () {
+    test('production Vercel uses its current HTTPS origin', () {
+      expect(
+        AuthConfig.webRedirectUriFor(
+          Uri.parse(
+            'https://glowup-flutter.vercel.app/auth-method?step=google',
+          ),
+        ),
+        'https://glowup-flutter.vercel.app',
+      );
+    });
+
+    test(
+      'local Flutter Web preserves its current localhost origin and port',
+      () {
+        expect(
+          AuthConfig.webRedirectUriFor(
+            Uri.parse('http://localhost:54321/auth-method'),
+          ),
+          'http://localhost:54321',
+        );
+      },
+    );
+
+    test('all non-Windows auth flows share the platform redirect selector', () {
+      final content = File(
+        'lib/auth/state/auth_controller.dart',
+      ).readAsStringSync();
+      expect(
+        content.contains('if (kIsWeb) return AuthConfig.webRedirectUri;'),
+        isTrue,
+      );
+      expect(RegExp(r'redirectTo: _redirectUri').allMatches(content).length, 2);
+      expect(
+        RegExp(r'emailRedirectTo: _redirectUri').allMatches(content).length,
+        2,
+      );
+    });
+  });
+
   group('5. Windows uses localhost loopback', () {
     test(
       'AuthConfig.windowsRedirectUri is a real 127.0.0.1 loopback URL on the documented fixed port',
